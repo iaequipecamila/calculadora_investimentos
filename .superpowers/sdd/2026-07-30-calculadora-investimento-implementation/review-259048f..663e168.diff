@@ -1,0 +1,650 @@
+663e168 feat: configure beige light theme with next-themes
+ .../progress.md                                    |   3 +
+ .../task-2-brief.md                                | 112 +++++++++++++++
+ app/globals.css                                    |  70 ++++++++--
+ app/layout.tsx                                     |  41 ++----
+ components/theme-provider.tsx                      |  11 ++
+ lib/utils.ts                                       |   6 +
+ package-lock.json                                  | 151 ++++++++++++++++++++-
+ package.json                                       |   7 +-
+ 8 files changed, 360 insertions(+), 41 deletions(-)
+---
+diff --git a/.superpowers/sdd/2026-07-30-calculadora-investimento-implementation/progress.md b/.superpowers/sdd/2026-07-30-calculadora-investimento-implementation/progress.md
+new file mode 100644
+index 0000000..37962fe
+--- /dev/null
++++ b/.superpowers/sdd/2026-07-30-calculadora-investimento-implementation/progress.md
+@@ -0,0 +1,3 @@
++# SDD ledger — plan: docs/superpowers/plans/2026-07-30-calculadora-investimento-implementation.md
++
++Task 1: complete (scaffold, commit 259048f)
+diff --git a/.superpowers/sdd/2026-07-30-calculadora-investimento-implementation/task-2-brief.md b/.superpowers/sdd/2026-07-30-calculadora-investimento-implementation/task-2-brief.md
+new file mode 100644
+index 0000000..91477c0
+--- /dev/null
++++ b/.superpowers/sdd/2026-07-30-calculadora-investimento-implementation/task-2-brief.md
+@@ -0,0 +1,112 @@
++### Task 2: Configure Beige Theme
++
++**Files:**
++- Modify: `app/globals.css`
++- Modify: `app/layout.tsx`
++- Create: `components/theme-provider.tsx`
++
++**Interfaces:**
++- Consumes: nothing (pure theming)
++- Produces: App shell with beige palette, light-only mode
++
++- [ ] **Step 1: Replace `app/globals.css` with beige theme**
++
++```css
++@tailwind base;
++@tailwind components;
++@tailwind utilities;
++
++@layer base {
++  :root {
++    --background: 20 6% 90%;
++    --foreground: 60 3% 6%;
++    --card: 0 0% 100%;
++    --card-foreground: 60 3% 6%;
++    --popover: 0 0% 100%;
++    --popover-foreground: 60 3% 6%;
++    --primary: 160 84% 39%;
++    --primary-foreground: 0 0% 98%;
++    --secondary: 60 5% 92%;
++    --secondary-foreground: 60 3% 6%;
++    --muted: 60 5% 92%;
++    --muted-foreground: 25 5% 45%;
++    --accent: 160 84% 39%;
++    --accent-foreground: 0 0% 98%;
++    --destructive: 0 72% 51%;
++    --destructive-foreground: 0 0% 98%;
++    --border: 20 6% 85%;
++    --input: 20 6% 85%;
++    --ring: 160 84% 39%;
++    --radius: 0.5rem;
++    --chart-1: 160 84% 39%;
++    --chart-2: 160 70% 50%;
++    --chart-3: 160 60% 60%;
++    --chart-4: 160 50% 70%;
++    --chart-5: 160 40% 80%;
++  }
++
++  * {
++    @apply border-border;
++  }
++
++  body {
++    @apply bg-background text-foreground;
++    font-family: var(--font-geist-sans, system-ui, sans-serif);
++  }
++}
++```
++
++- [ ] **Step 2: Create theme provider**
++
++File `components/theme-provider.tsx`:
++
++```tsx
++"use client"
++
++import { ThemeProvider as NextThemesProvider } from "next-themes"
++
++export function ThemeProvider({ children }: { children: React.ReactNode }) {
++  return (
++    <NextThemesProvider attribute="class" defaultTheme="light" forcedTheme="light">
++      {children}
++    </NextThemesProvider>
++  )
++}
++```
++
++- [ ] **Step 3: Update `app/layout.tsx`**
++
++```tsx
++import type { Metadata } from "next"
++import { Geist, Geist_Mono } from "next/font/google"
++import "./globals.css"
++import { ThemeProvider } from "@/components/theme-provider"
++
++const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] })
++const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] })
++
++export const metadata: Metadata = {
++  title: "Calculadora de Investimentos",
++  description: "Simule seus investimentos com juros compostos",
++}
++
++export default function RootLayout({ children }: { children: React.ReactNode }) {
++  return (
++    <html lang="pt-BR" suppressHydrationWarning>
++      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
++        <ThemeProvider>{children}</ThemeProvider>
++      </body>
++    </html>
++  )
++}
++```
++
++- [ ] **Step 4: Verify theme**
++
++Run `npm run dev`, confirm the page loads with beige background (no flash of dark mode).
++
++- [ ] **Step 5: Commit**
++
++```bash
++git add -A && git commit -m "feat: configure beige light theme with next-themes"
++```
+diff --git a/app/globals.css b/app/globals.css
+index a2dc41e..ea2632e 100644
+--- a/app/globals.css
++++ b/app/globals.css
+@@ -1,26 +1,70 @@
+ @import "tailwindcss";
+ 
+ :root {
+-  --background: #ffffff;
+-  --foreground: #171717;
++  --background: 20 6% 90%;
++  --foreground: 60 3% 6%;
++  --card: 0 0% 100%;
++  --card-foreground: 60 3% 6%;
++  --popover: 0 0% 100%;
++  --popover-foreground: 60 3% 6%;
++  --primary: 160 84% 39%;
++  --primary-foreground: 0 0% 98%;
++  --secondary: 60 5% 92%;
++  --secondary-foreground: 60 3% 6%;
++  --muted: 60 5% 92%;
++  --muted-foreground: 25 5% 45%;
++  --accent: 160 84% 39%;
++  --accent-foreground: 0 0% 98%;
++  --destructive: 0 72% 51%;
++  --destructive-foreground: 0 0% 98%;
++  --border: 20 6% 85%;
++  --input: 20 6% 85%;
++  --ring: 160 84% 39%;
++  --radius: 0.5rem;
++  --chart-1: 160 84% 39%;
++  --chart-2: 160 70% 50%;
++  --chart-3: 160 60% 60%;
++  --chart-4: 160 50% 70%;
++  --chart-5: 160 40% 80%;
+ }
+ 
+ @theme inline {
+-  --color-background: var(--background);
+-  --color-foreground: var(--foreground);
++  --color-background: hsl(var(--background));
++  --color-foreground: hsl(var(--foreground));
++  --color-card: hsl(var(--card));
++  --color-card-foreground: hsl(var(--card-foreground));
++  --color-popover: hsl(var(--popover));
++  --color-popover-foreground: hsl(var(--popover-foreground));
++  --color-primary: hsl(var(--primary));
++  --color-primary-foreground: hsl(var(--primary-foreground));
++  --color-secondary: hsl(var(--secondary));
++  --color-secondary-foreground: hsl(var(--secondary-foreground));
++  --color-muted: hsl(var(--muted));
++  --color-muted-foreground: hsl(var(--muted-foreground));
++  --color-accent: hsl(var(--accent));
++  --color-accent-foreground: hsl(var(--accent-foreground));
++  --color-destructive: hsl(var(--destructive));
++  --color-destructive-foreground: hsl(var(--destructive-foreground));
++  --color-border: hsl(var(--border));
++  --color-input: hsl(var(--input));
++  --color-ring: hsl(var(--ring));
++  --color-chart-1: hsl(var(--chart-1));
++  --color-chart-2: hsl(var(--chart-2));
++  --color-chart-3: hsl(var(--chart-3));
++  --color-chart-4: hsl(var(--chart-4));
++  --color-chart-5: hsl(var(--chart-5));
++  --radius: 0.5rem;
+   --font-sans: var(--font-geist-sans);
+   --font-mono: var(--font-geist-mono);
+ }
+ 
+-@media (prefers-color-scheme: dark) {
+-  :root {
+-    --background: #0a0a0a;
+-    --foreground: #ededed;
++@layer base {
++  * {
++    @apply border-border;
+   }
+-}
+ 
+-body {
+-  background: var(--background);
+-  color: var(--foreground);
+-  font-family: Arial, Helvetica, sans-serif;
++  body {
++    @apply bg-background text-foreground;
++    font-family: var(--font-geist-sans, system-ui, sans-serif);
++  }
+ }
+diff --git a/app/layout.tsx b/app/layout.tsx
+index 976eb90..92d4621 100644
+--- a/app/layout.tsx
++++ b/app/layout.tsx
+@@ -1,33 +1,22 @@
+-import type { Metadata } from "next";
+-import { Geist, Geist_Mono } from "next/font/google";
+-import "./globals.css";
++import type { Metadata } from "next"
++import { Geist, Geist_Mono } from "next/font/google"
++import "./globals.css"
++import { ThemeProvider } from "@/components/theme-provider"
+ 
+-const geistSans = Geist({
+-  variable: "--font-geist-sans",
+-  subsets: ["latin"],
+-});
+-
+-const geistMono = Geist_Mono({
+-  variable: "--font-geist-mono",
+-  subsets: ["latin"],
+-});
++const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] })
++const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] })
+ 
+ export const metadata: Metadata = {
+-  title: "Create Next App",
+-  description: "Generated by create next app",
+-};
++  title: "Calculadora de Investimentos",
++  description: "Simule seus investimentos com juros compostos",
++}
+ 
+-export default function RootLayout({
+-  children,
+-}: Readonly<{
+-  children: React.ReactNode;
+-}>) {
++export default function RootLayout({ children }: { children: React.ReactNode }) {
+   return (
+-    <html
+-      lang="en"
+-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+-    >
+-      <body className="min-h-full flex flex-col">{children}</body>
++    <html lang="pt-BR" suppressHydrationWarning>
++      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
++        <ThemeProvider>{children}</ThemeProvider>
++      </body>
+     </html>
+-  );
++  )
+ }
+diff --git a/components/theme-provider.tsx b/components/theme-provider.tsx
+new file mode 100644
+index 0000000..bf95284
+--- /dev/null
++++ b/components/theme-provider.tsx
+@@ -0,0 +1,11 @@
++"use client"
++
++import { ThemeProvider as NextThemesProvider } from "next-themes"
++
++export function ThemeProvider({ children }: { children: React.ReactNode }) {
++  return (
++    <NextThemesProvider attribute="class" defaultTheme="light" forcedTheme="light">
++      {children}
++    </NextThemesProvider>
++  )
++}
+diff --git a/lib/utils.ts b/lib/utils.ts
+new file mode 100644
+index 0000000..bd0c391
+--- /dev/null
++++ b/lib/utils.ts
+@@ -0,0 +1,6 @@
++import { clsx, type ClassValue } from "clsx"
++import { twMerge } from "tailwind-merge"
++
++export function cn(...inputs: ClassValue[]) {
++  return twMerge(clsx(inputs))
++}
+diff --git a/package-lock.json b/package-lock.json
+index ff487d9..5caed46 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -1,25 +1,30 @@
+ {
+   "name": "calculadora_investimento",
+   "version": "0.1.0",
+   "lockfileVersion": 3,
+   "requires": true,
+   "packages": {
+     "": {
+       "name": "calculadora_investimento",
+       "version": "0.1.0",
+       "dependencies": {
++        "@base-ui/react": "^1.6.0",
++        "class-variance-authority": "^0.7.1",
++        "clsx": "^2.1.1",
++        "lucide-react": "^1.28.0",
+         "next": "16.2.12",
+         "next-themes": "^0.4.6",
+         "react": "19.2.4",
+         "react-dom": "19.2.4",
+-        "recharts": "^3.8.0"
++        "recharts": "^3.8.0",
++        "tailwind-merge": "^3.6.0"
+       },
+       "devDependencies": {
+         "@tailwindcss/postcss": "^4",
+         "@types/node": "^20",
+         "@types/react": "^19",
+         "@types/react-dom": "^19",
+         "eslint": "^9",
+         "eslint-config-next": "16.2.12",
+         "tailwindcss": "^4",
+         "typescript": "^5"
+@@ -195,20 +200,29 @@
+       "dependencies": {
+         "@babel/types": "^7.29.7"
+       },
+       "bin": {
+         "parser": "bin/babel-parser.js"
+       },
+       "engines": {
+         "node": ">=6.0.0"
+       }
+     },
++    "node_modules/@babel/runtime": {
++      "version": "7.29.7",
++      "resolved": "https://registry.npmjs.org/@babel/runtime/-/runtime-7.29.7.tgz",
++      "integrity": "sha512-Nq8OhGWiZIZGV6hLHoyAKLLcJihP/xFeBMGJoUrxTX2psI8dCifzLhZISFb+VWS3wFMRDmCGw5R+dOySCqPLhw==",
++      "license": "MIT",
++      "engines": {
++        "node": ">=6.9.0"
++      }
++    },
+     "node_modules/@babel/template": {
+       "version": "7.29.7",
+       "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "@babel/code-frame": "^7.29.7",
+         "@babel/parser": "^7.29.7",
+         "@babel/types": "^7.29.7"
+       },
+       "engines": {
+@@ -237,20 +251,86 @@
+       "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "@babel/helper-string-parser": "^7.29.7",
+         "@babel/helper-validator-identifier": "^7.29.7"
+       },
+       "engines": {
+         "node": ">=6.9.0"
+       }
+     },
++    "node_modules/@base-ui/react": {
++      "version": "1.6.0",
++      "resolved": "https://registry.npmjs.org/@base-ui/react/-/react-1.6.0.tgz",
++      "integrity": "sha512-/jzjTWJYXhRFO45Bev9lc3cHbmjzCMpUqbMZ2AgKy/z25mY9B6shGSNcXcjQar9n5doM0KYW1W8fcFv2jZBuMw==",
++      "license": "MIT",
++      "dependencies": {
++        "@babel/runtime": "^7.29.2",
++        "@base-ui/utils": "0.3.1",
++        "@floating-ui/react-dom": "^2.1.8",
++        "@floating-ui/utils": "^0.2.11",
++        "use-sync-external-store": "^1.6.0"
++      },
++      "engines": {
++        "node": ">=14.0.0"
++      },
++      "funding": {
++        "type": "opencollective",
++        "url": "https://opencollective.com/mui-org"
++      },
++      "peerDependencies": {
++        "@date-fns/tz": "^1.2.0",
++        "@types/react": "^17 || ^18 || ^19",
++        "date-fns": "^4.0.0",
++        "react": "^17 || ^18 || ^19",
++        "react-dom": "^17 || ^18 || ^19"
++      },
++      "peerDependenciesMeta": {
++        "@date-fns/tz": {
++          "optional": true
++        },
++        "@types/react": {
++          "optional": true
++        },
++        "date-fns": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/@base-ui/utils": {
++      "version": "0.3.1",
++      "resolved": "https://registry.npmjs.org/@base-ui/utils/-/utils-0.3.1.tgz",
++      "integrity": "sha512-gFFiltORVmW/N6IILTGxizP3PBpVpysqML1ALY5Vk0mH+7faVkCknOU31goYHN5Aoek2dkjxva1XOD2Ce9WuIg==",
++      "license": "MIT",
++      "dependencies": {
++        "@babel/runtime": "^7.29.2",
++        "@floating-ui/utils": "^0.2.11",
++        "reselect": "^5.2.0",
++        "use-sync-external-store": "^1.6.0"
++      },
++      "peerDependencies": {
++        "@types/react": "^17 || ^18 || ^19",
++        "react": "^17 || ^18 || ^19",
++        "react-dom": "^17 || ^18 || ^19"
++      },
++      "peerDependenciesMeta": {
++        "@types/react": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/@base-ui/utils/node_modules/reselect": {
++      "version": "5.2.0",
++      "resolved": "https://registry.npmjs.org/reselect/-/reselect-5.2.0.tgz",
++      "integrity": "sha512-AgZ3UOZm3YndfrJ4OYjgrT7bmCm/1iqkjvEfH/oYjzh6PD2qw4QuT3jjnXIrpdt4MTpMXclMT3lXbmRY+XRakw==",
++      "license": "MIT"
++    },
+     "node_modules/@emnapi/core": {
+       "version": "1.10.0",
+       "resolved": "https://registry.npmjs.org/@emnapi/core/-/core-1.10.0.tgz",
+       "integrity": "sha512-yq6OkJ4p82CAfPl0u9mQebQHKPJkY7WrIuk205cTYnYe+k2Z8YBh11FrbRG/H6ihirqcacOgl2BIO8oyMQLeXw==",
+       "dev": true,
+       "license": "MIT",
+       "optional": true,
+       "dependencies": {
+         "@emnapi/wasi-threads": "1.2.1",
+         "tslib": "^2.4.0"
+@@ -394,20 +474,58 @@
+       "dev": true,
+       "license": "Apache-2.0",
+       "dependencies": {
+         "@eslint/core": "^0.17.0",
+         "levn": "^0.4.1"
+       },
+       "engines": {
+         "node": "^18.18.0 || ^20.9.0 || >=21.1.0"
+       }
+     },
++    "node_modules/@floating-ui/core": {
++      "version": "1.8.0",
++      "resolved": "https://registry.npmjs.org/@floating-ui/core/-/core-1.8.0.tgz",
++      "integrity": "sha512-0CIZ5itps/8x7BG8dEIhs53BvCUH2PCoogtakwRTut+Arm58sJooJ0AuZhLw2HJYIR5cMLNPBSS728sPho2khQ==",
++      "license": "MIT",
++      "dependencies": {
++        "@floating-ui/utils": "^0.2.12"
++      }
++    },
++    "node_modules/@floating-ui/dom": {
++      "version": "1.8.0",
++      "resolved": "https://registry.npmjs.org/@floating-ui/dom/-/dom-1.8.0.tgz",
++      "integrity": "sha512-yXSrzeHZBTZadLOlfyhCkJHNeLJnHRnRInwdZ40L7ZiaAtrBwoYlsDrX3v5zB1Utk7CLfzcOVnVVWoXEky7Ceg==",
++      "license": "MIT",
++      "dependencies": {
++        "@floating-ui/core": "^1.8.0",
++        "@floating-ui/utils": "^0.2.12"
++      }
++    },
++    "node_modules/@floating-ui/react-dom": {
++      "version": "2.1.9",
++      "resolved": "https://registry.npmjs.org/@floating-ui/react-dom/-/react-dom-2.1.9.tgz",
++      "integrity": "sha512-JDjEFGCpImxDCA7JJKviA0M9+RtmJdj0m/NVU5IMgBK+AmZouAQQ7/+2GLH0GXXY0YMw9oXPB8hKdbPYg5QLYg==",
++      "license": "MIT",
++      "dependencies": {
++        "@floating-ui/dom": "^1.8.0"
++      },
++      "peerDependencies": {
++        "react": ">=16.8.0",
++        "react-dom": ">=16.8.0"
++      }
++    },
++    "node_modules/@floating-ui/utils": {
++      "version": "0.2.12",
++      "resolved": "https://registry.npmjs.org/@floating-ui/utils/-/utils-0.2.12.tgz",
++      "integrity": "sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==",
++      "license": "MIT"
++    },
+     "node_modules/@humanfs/core": {
+       "version": "0.19.2",
+       "dev": true,
+       "license": "Apache-2.0",
+       "dependencies": {
+         "@humanfs/types": "^0.15.0"
+       },
+       "engines": {
+         "node": ">=18.18.0"
+       }
+@@ -3153,20 +3271,32 @@
+         "ansi-styles": "^4.1.0",
+         "supports-color": "^7.1.0"
+       },
+       "engines": {
+         "node": ">=10"
+       },
+       "funding": {
+         "url": "https://github.com/chalk/chalk?sponsor=1"
+       }
+     },
++    "node_modules/class-variance-authority": {
++      "version": "0.7.1",
++      "resolved": "https://registry.npmjs.org/class-variance-authority/-/class-variance-authority-0.7.1.tgz",
++      "integrity": "sha512-Ka+9Trutv7G8M6WT6SeiRWz792K5qEqIGEGzXKhAE6xOWAY6pPH8U+9IY3oCMv6kqTmLsv7Xh/2w2RigkePMsg==",
++      "license": "Apache-2.0",
++      "dependencies": {
++        "clsx": "^2.1.1"
++      },
++      "funding": {
++        "url": "https://polar.sh/cva"
++      }
++    },
+     "node_modules/client-only": {
+       "version": "0.0.1",
+       "license": "MIT"
+     },
+     "node_modules/clsx": {
+       "version": "2.1.1",
+       "resolved": "https://registry.npmjs.org/clsx/-/clsx-2.1.1.tgz",
+       "integrity": "sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==",
+       "license": "MIT",
+       "engines": {
+@@ -5353,20 +5483,29 @@
+       }
+     },
+     "node_modules/lru-cache": {
+       "version": "5.1.1",
+       "dev": true,
+       "license": "ISC",
+       "dependencies": {
+         "yallist": "^3.0.2"
+       }
+     },
++    "node_modules/lucide-react": {
++      "version": "1.28.0",
++      "resolved": "https://registry.npmjs.org/lucide-react/-/lucide-react-1.28.0.tgz",
++      "integrity": "sha512-fARAFJULsGuDDydjp6+6blekG/sBIM29TerzLjc9bQUKAcEfrSc4ZQKb25KRz4OMKd87cZTb5dgq0w/T6KufVg==",
++      "license": "ISC",
++      "peerDependencies": {
++        "react": "^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0"
++      }
++    },
+     "node_modules/magic-string": {
+       "version": "0.30.21",
+       "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "@jridgewell/sourcemap-codec": "^1.5.5"
+       }
+     },
+     "node_modules/math-intrinsics": {
+       "version": "1.1.0",
+@@ -6977,20 +7116,30 @@
+       "version": "1.0.0",
+       "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">= 0.4"
+       },
+       "funding": {
+         "url": "https://github.com/sponsors/ljharb"
+       }
+     },
++    "node_modules/tailwind-merge": {
++      "version": "3.6.0",
++      "resolved": "https://registry.npmjs.org/tailwind-merge/-/tailwind-merge-3.6.0.tgz",
++      "integrity": "sha512-uxL7qAVQriqRQPAyK3pj66VqskWqoZ37PW94jwOTwNfq/z9oyu1V+eqrZqtR2+fCiXdYOZe/Modt8GtvqNzu+w==",
++      "license": "MIT",
++      "funding": {
++        "type": "github",
++        "url": "https://github.com/sponsors/dcastil"
++      }
++    },
+     "node_modules/tailwindcss": {
+       "version": "4.3.3",
+       "dev": true,
+       "license": "MIT"
+     },
+     "node_modules/tapable": {
+       "version": "2.3.3",
+       "dev": true,
+       "license": "MIT",
+       "engines": {
+diff --git a/package.json b/package.json
+index 0ed0d02..2398190 100644
+--- a/package.json
++++ b/package.json
+@@ -2,25 +2,30 @@
+   "name": "calculadora_investimento",
+   "version": "0.1.0",
+   "private": true,
+   "scripts": {
+     "dev": "next dev",
+     "build": "next build",
+     "start": "next start",
+     "lint": "eslint"
+   },
+   "dependencies": {
++    "@base-ui/react": "^1.6.0",
++    "class-variance-authority": "^0.7.1",
++    "clsx": "^2.1.1",
++    "lucide-react": "^1.28.0",
+     "next": "16.2.12",
+     "next-themes": "^0.4.6",
+     "react": "19.2.4",
+     "react-dom": "19.2.4",
+-    "recharts": "^3.8.0"
++    "recharts": "^3.8.0",
++    "tailwind-merge": "^3.6.0"
+   },
+   "devDependencies": {
+     "@tailwindcss/postcss": "^4",
+     "@types/node": "^20",
+     "@types/react": "^19",
+     "@types/react-dom": "^19",
+     "eslint": "^9",
+     "eslint-config-next": "16.2.12",
+     "tailwindcss": "^4",
+     "typescript": "^5"
