@@ -17,7 +17,8 @@ export interface Resultado {
 export function calcular(params: InputParams): Resultado {
   const { valorInicial, aporteMensal, taxa, taxaTipo, periodo, periodoTipo } = params
 
-  const taxaMensal = taxaTipo === "ano" ? taxa / 100 / 12 : taxa / 100
+  const taxaDecimal = taxa / 100
+  const taxaMensal = taxaTipo === "ano" ? Math.pow(1 + taxaDecimal, 1 / 12) - 1 : taxaDecimal
   const nMeses = periodoTipo === "anos" ? periodo * 12 : periodo
 
   let totalBruto: number
