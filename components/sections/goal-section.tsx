@@ -11,9 +11,10 @@ interface GoalSectionProps {
   ativo: boolean
   onAtivoChange: (v: boolean) => void
   mesesParaMeta?: number
+  metaViavel?: boolean
 }
 
-export function GoalSection({ valorMeta, onValorMetaChange, ativo, onAtivoChange, mesesParaMeta }: GoalSectionProps) {
+export function GoalSection({ valorMeta, onValorMetaChange, ativo, onAtivoChange, mesesParaMeta, metaViavel }: GoalSectionProps) {
   const [open, setOpen] = useState(true)
 
   return (
@@ -34,9 +35,19 @@ export function GoalSection({ valorMeta, onValorMetaChange, ativo, onAtivoChange
                 <Label htmlFor="valorMeta">Valor desejado</Label>
                 <Input id="valorMeta" type="text" inputMode="numeric" value={valorMeta.display} onChange={onValorMetaChange} placeholder="R$ 0,00" />
               </div>
+              {metaViavel === false && (
+                <p className="text-sm font-medium" style={{ color: '#C17A5A' }}>
+                  Meta não atingível com esses parâmetros
+                </p>
+              )}
               {mesesParaMeta !== undefined && (
                 <p className="text-sm font-medium" style={{ color: '#6E8F63' }}>
                   Meta atingida em {Math.floor(mesesParaMeta / 12)} anos e {mesesParaMeta % 12} meses
+                </p>
+              )}
+              {metaViavel === true && mesesParaMeta === undefined && (
+                <p className="text-sm font-medium" style={{ color: '#6E8F63' }}>
+                  Meta já atingida com o valor inicial
                 </p>
               )}
             </>

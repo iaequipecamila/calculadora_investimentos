@@ -82,6 +82,7 @@ export function InvestmentForm({ onSimular, resultado }: InvestmentFormProps) {
         ativo={metaAtiva}
         onAtivoChange={setMetaAtiva}
         mesesParaMeta={resultado?.mesesParaMeta}
+        metaViavel={resultado?.metaViavel}
       />
 
       <Button

@@ -16,60 +16,63 @@ export function ResultsCards({ resultado }: ResultsCardsProps) {
     backgroundColor: '#FFFFFF',
     border: '1px solid #E3DCD0',
     borderRadius: '9px',
-    padding: '14px 16px',
+    padding: '10px 8px',
     textAlign: 'center',
+    overflow: 'hidden',
   }
 
   const labelStyle: React.CSSProperties = {
-    fontSize: '0.62rem',
-    letterSpacing: '0.13em',
+    fontSize: '0.55rem',
+    letterSpacing: '0.1em',
     textTransform: 'uppercase',
     color: '#9A9083',
     fontWeight: 600,
-    marginBottom: '4px',
+    marginBottom: '2px',
+    whiteSpace: 'nowrap',
   }
+
+  const valueStyle = (color: string, big = false): React.CSSProperties => ({
+    fontFamily: 'var(--font-fraunces)',
+    fontSize: big ? '1rem' : '0.85rem',
+    fontWeight: 600,
+    lineHeight: 1.2,
+    color,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  })
 
   const showCorrigido = resultado.totalCorrigido !== resultado.totalBruto && resultado.totalCorrigido > 0
 
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className="grid grid-cols-3 gap-1.5">
       <div style={cardStyle}>
         <p style={labelStyle}>Total Bruto</p>
-        <p style={{ fontFamily: 'var(--font-fraunces)', fontSize: '1.3rem', fontWeight: 600, lineHeight: 1.1, color: '#A67C4E' }}>
-          {formatBRL(resultado.totalBruto)}
-        </p>
+        <p style={valueStyle('#A67C4E', true)}>{formatBRL(resultado.totalBruto)}</p>
       </div>
       <div style={cardStyle}>
         <p style={labelStyle}>Total Líquido</p>
-        <p style={{ fontFamily: 'var(--font-fraunces)', fontSize: '1.3rem', fontWeight: 600, lineHeight: 1.1, color: '#6E8F63' }}>
-          {formatBRL(resultado.totalLiquido)}
-        </p>
+        <p style={valueStyle('#6E8F63', true)}>{formatBRL(resultado.totalLiquido)}</p>
       </div>
       <div style={cardStyle}>
         <p style={labelStyle}>Juros Ganhos</p>
-        <p style={{ fontFamily: 'var(--font-fraunces)', fontSize: '1.1rem', fontWeight: 600, lineHeight: 1.1, color: '#2E2A24' }}>
-          {formatBRL(resultado.jurosGanhos)}
-        </p>
+        <p style={valueStyle('#2E2A24')}>{formatBRL(resultado.jurosGanhos)}</p>
       </div>
       <div style={cardStyle}>
         <p style={labelStyle}>Total Investido</p>
-        <p style={{ fontFamily: 'var(--font-fraunces)', fontSize: '1.1rem', fontWeight: 600, lineHeight: 1.1, color: '#2E2A24' }}>
-          {formatBRL(resultado.totalInvestido)}
-        </p>
+        <p style={valueStyle('#2E2A24')}>{formatBRL(resultado.totalInvestido)}</p>
       </div>
       <div style={cardStyle}>
         <p style={labelStyle}>IR</p>
-        <p style={{ fontFamily: 'var(--font-fraunces)', fontSize: '1.1rem', fontWeight: 600, lineHeight: 1.1, color: '#C17A5A' }}>
-          {formatBRL(resultado.totalIR)}
-        </p>
-        <p style={{ fontSize: '0.6rem', color: '#9A9083' }}>{resultado.aliquotaIREfetiva}% efetiva</p>
+        <p style={valueStyle('#C17A5A')}>{formatBRL(resultado.totalIR)}</p>
+        <p style={{ fontSize: '0.5rem', color: '#9A9083' }}>{resultado.aliquotaIREfetiva}% efetiva</p>
       </div>
       <div style={cardStyle}>
         <p style={labelStyle}>{showCorrigido ? "Valor Corrigido" : "Alíquota"}</p>
-        <p style={{ fontFamily: 'var(--font-fraunces)', fontSize: '1.1rem', fontWeight: 600, lineHeight: 1.1, color: '#5A7A9A' }}>
+        <p style={valueStyle('#5A7A9A')}>
           {showCorrigido ? formatBRL(resultado.totalCorrigido) : `${resultado.aliquotaIREfetiva}%`}
         </p>
-        <p style={{ fontSize: '0.6rem', color: '#9A9083' }}>
+        <p style={{ fontSize: '0.5rem', color: '#9A9083' }}>
           {showCorrigido ? "poder de compra" : "IR efetiva"}
         </p>
       </div>

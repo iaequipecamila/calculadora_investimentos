@@ -32,6 +32,7 @@ export interface Resultado {
   aliquotaIREfetiva: number
   totalCorrigido: number
   mesesParaMeta?: number
+  metaViavel?: boolean
 }
 
 export function calcularIR(lucro: number, dias: number, aliquotaFixa: number | null): { aliquota: number; valorIR: number } {
@@ -71,14 +72,14 @@ export function calcularMeta(
   aporteMensal: number,
   taxaMensal: number
 ): { meses: number; viavel: boolean } {
-  if (valorInicial + aporteMensal * 1200 < valorDesejado) {
-    return { meses: 0, viavel: false }
-  }
   if (taxaMensal === 0) {
     if (aporteMensal <= 0) return { meses: 0, viavel: false }
     const meses = Math.ceil((valorDesejado - valorInicial) / aporteMensal)
     return { meses: Math.max(0, meses), viavel: true }
   }
+
+  if (valorInicial >= valorDesejado) return { meses: 0, viavel: true }
+
   const pmtR = aporteMensal / taxaMensal
   const fator = (valorDesejado + pmtR) / (valorInicial + pmtR)
   if (fator <= 1) return { meses: 0, viavel: true }
@@ -150,8 +151,11 @@ export function calcular(params: InputParams): Resultado {
   }
 
   let mesesParaMeta: number | undefined
+  let metaViavel: boolean | undefined
   if (modoMeta && valorMeta) {
-    mesesParaMeta = calcularMeta(valorMeta, valorInicial, aporteMensal, taxaMensal).meses
+    const meta = calcularMeta(valorMeta, valorInicial, aporteMensal, taxaMensal)
+    metaViavel = meta.viavel
+    mesesParaMeta = meta.viavel && meta.meses > 0 ? meta.meses : undefined
   }
 
   return {
@@ -164,5 +168,6 @@ export function calcular(params: InputParams): Resultado {
     aliquotaIREfetiva,
     totalCorrigido,
     mesesParaMeta,
+    metaViavel,
   }
 }

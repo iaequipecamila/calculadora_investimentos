@@ -53,8 +53,8 @@ describe("calcularMeta", () => {
     expect(result.viavel).toBe(true)
   })
 
-  it("retorna viavel=false se aporte é insuficiente mesmo sem prazo", () => {
-    const result = calcularMeta(1_000_000, 0, 100, 0.01)
+  it("retorna viavel=false se não há aporte nem juros", () => {
+    const result = calcularMeta(1_000_000, 0, 0, 0)
     expect(result.viavel).toBe(false)
   })
 })
