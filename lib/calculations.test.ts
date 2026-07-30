@@ -1,4 +1,4 @@
-import { calcular, calcularIR, calcularInflacao, rentabilidadeReal, calcularMeta } from "./calculations"
+import { calcular, calcularIR, calcularInflacao, rentabilidadeReal, calcularMeta, calcularAporteNecessario } from "./calculations"
 
 describe("calcularIR", () => {
   it("aplica aliquota fixa de 15% sobre o lucro", () => {
@@ -100,5 +100,37 @@ describe("calcular (estendido)", () => {
       valorMeta: 50000,
     })
     expect(result.mesesParaMeta).toBeDefined()
+  })
+})
+
+describe("calcularAporteNecessario", () => {
+  it("calcula aporte necessário para atingir meta em n meses", () => {
+    const result = calcularAporteNecessario(50000, 1000, 60, 0.01)
+    expect(result).toBeCloseTo(589.98, 1)
+  })
+
+  it("retorna 0 se valor inicial já >= valor desejado", () => {
+    const result = calcularAporteNecessario(1000, 5000, 60, 0.01)
+    expect(result).toBe(0)
+  })
+
+  it("retorna null se nMeses <= 0", () => {
+    const result = calcularAporteNecessario(50000, 1000, 0, 0.01)
+    expect(result).toBeNull()
+  })
+
+  it("usa divisão simples quando taxa é 0", () => {
+    const result = calcularAporteNecessario(50000, 1000, 60, 0)
+    expect(result).toBeCloseTo(816.67, 1)
+  })
+
+  it("retorna null se fator de crescimento é infinito", () => {
+    const result = calcularAporteNecessario(1e308, 0, 1e6, 0.1)
+    expect(result).toBeNull()
+  })
+
+  it("retorna null se pmt calculado for negativo (valor inicial já ultrapassa meta com juros)", () => {
+    const result = calcularAporteNecessario(10000, 5000, 120, 0.01)
+    expect(result).toBeNull()
   })
 })

@@ -33,6 +33,7 @@ export interface Resultado {
   totalCorrigido: number
   mesesParaMeta?: number
   metaViavel?: boolean
+  aporteNecessario?: number | null
 }
 
 export function calcularIR(lucro: number, dias: number, aliquotaFixa: number | null): { aliquota: number; valorIR: number } {
@@ -64,6 +65,32 @@ export function calcularInflacao(
 
 export function rentabilidadeReal(taxaNominal: number, taxaInflacao: number): number {
   return (1 + taxaNominal) / (1 + taxaInflacao) - 1
+}
+
+export function calcularAporteNecessario(
+  valorDesejado: number,
+  valorInicial: number,
+  nMeses: number,
+  taxaMensal: number
+): number | null {
+  if (nMeses <= 0) return null
+  if (valorInicial >= valorDesejado) return 0
+
+  if (taxaMensal === 0) {
+    const pmt = (valorDesejado - valorInicial) / nMeses
+    return Math.round(pmt * 100) / 100
+  }
+
+  const fatorCrescimento = Math.pow(1 + taxaMensal, nMeses)
+  if (!isFinite(fatorCrescimento)) return null
+
+  const numerador = (valorDesejado - valorInicial * fatorCrescimento) * taxaMensal
+  const denominador = fatorCrescimento - 1
+  if (denominador === 0) return null
+
+  const pmt = numerador / denominador
+  if (!isFinite(pmt) || pmt < 0) return null
+  return Math.round(pmt * 100) / 100
 }
 
 export function calcularMeta(
@@ -158,6 +185,11 @@ export function calcular(params: InputParams): Resultado {
     mesesParaMeta = meta.viavel && meta.meses > 0 ? meta.meses : undefined
   }
 
+  let aporteNecessario: number | null | undefined
+  if (modoMeta && valorMeta && nMeses > 0) {
+    aporteNecessario = calcularAporteNecessario(valorMeta, valorInicial, nMeses, taxaMensal)
+  }
+
   return {
     totalBruto,
     totalInvestido,
@@ -169,5 +201,6 @@ export function calcular(params: InputParams): Resultado {
     totalCorrigido,
     mesesParaMeta,
     metaViavel,
+    aporteNecessario,
   }
 }
