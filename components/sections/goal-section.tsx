@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { GoalRing } from "@/components/goal-ring"
 
 interface GoalSectionProps {
   valorMeta: { display: string; rawValue: number }
@@ -14,6 +15,7 @@ interface GoalSectionProps {
   metaViavel?: boolean
   aporteNecessario?: number | null
   aporteMensalAtual?: number
+  totalBruto?: number
 }
 
 function formatBRL(value: number): string {
@@ -23,7 +25,7 @@ function formatBRL(value: number): string {
   }).format(value)
 }
 
-export function GoalSection({ valorMeta, onValorMetaChange, ativo, onAtivoChange, mesesParaMeta, metaViavel, aporteNecessario, aporteMensalAtual }: GoalSectionProps) {
+export function GoalSection({ valorMeta, onValorMetaChange, ativo, onAtivoChange, mesesParaMeta, metaViavel, aporteNecessario, aporteMensalAtual, totalBruto }: GoalSectionProps) {
   const [open, setOpen] = useState(true)
 
   return (
@@ -49,18 +51,23 @@ export function GoalSection({ valorMeta, onValorMetaChange, ativo, onAtivoChange
                   Meta não atingível com esses parâmetros
                 </p>
               )}
+              {metaViavel !== false && totalBruto !== undefined && valorMeta.rawValue > 0 && (
+                <div className="animate-fade-up">
+                  <GoalRing valorMeta={valorMeta.rawValue} totalBruto={totalBruto} />
+                </div>
+              )}
               {mesesParaMeta !== undefined && (
-                <p className="text-sm font-medium" style={{ color: '#6E8F63' }}>
+                <p className="text-sm font-medium text-center animate-count-in" style={{ color: '#6E8F63' }}>
                   Meta atingida em {Math.floor(mesesParaMeta / 12)} anos e {mesesParaMeta % 12} meses
                 </p>
               )}
               {metaViavel === true && mesesParaMeta === undefined && (
-                <p className="text-sm font-medium" style={{ color: '#6E8F63' }}>
+                <p className="text-sm font-medium text-center animate-count-in" style={{ color: '#6E8F63' }}>
                   Meta já atingida com o valor inicial
                 </p>
               )}
               {(aporteNecessario !== undefined && aporteNecessario !== null && mesesParaMeta !== undefined && aporteMensalAtual !== undefined) && (
-                <div className="pt-2 border-t mt-2 space-y-1" style={{ borderColor: '#E3DCD0' }}>
+                <div className="pt-2 border-t mt-2 space-y-1 animate-count-in" style={{ borderColor: '#E3DCD0' }}>
                   <p className="text-xs" style={{ color: '#9A9083' }}>
                     Aporte atual: {formatBRL(aporteMensalAtual)}/mês
                   </p>

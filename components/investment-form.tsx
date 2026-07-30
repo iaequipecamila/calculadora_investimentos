@@ -39,7 +39,7 @@ export function InvestmentForm({ onSimular, resultado }: InvestmentFormProps) {
       periodo: parseInt(periodo, 10) || 0,
       periodoTipo,
       ...(modoIR === "tabela" ? { modoIR: "tabela" as const, ...(comeCotas ? { comeCotas: true } : {}) } : { modoIR: "fixo" as const, aliquotaIR: parseFloat(aliquotaIR.replace(",", ".")) || 0, ...(comeCotas ? { comeCotas: true } : {}) }),
-      ...(inflacaoAtiva && parseFloat(taxaInflacao) > 0 ? { taxaInflacao: parseFloat(taxaInflacao.replace(",", ".")) } : {}),
+      ...(inflacaoAtiva ? { taxaInflacao: parseFloat(taxaInflacao.replace(",", ".")) || 0 } : {}),
       ...(metaAtiva && valorMeta.rawValue > 0 ? { modoMeta: true as const, valorMeta: valorMeta.rawValue } : {}),
     }
     onSimular(params)
@@ -85,6 +85,7 @@ export function InvestmentForm({ onSimular, resultado }: InvestmentFormProps) {
         metaViavel={resultado?.metaViavel}
         aporteNecessario={resultado?.aporteNecessario}
         aporteMensalAtual={aporteMensal.rawValue}
+        totalBruto={resultado?.totalBruto}
       />
 
       <Button

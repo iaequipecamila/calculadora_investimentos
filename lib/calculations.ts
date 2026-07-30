@@ -123,6 +123,8 @@ export function calcular(params: InputParams): Resultado {
   const nMeses = periodoTipo === "anos" ? periodo * 12 : periodo
 
   const evolucao: EvolucaoMes[] = []
+  let baseComeCotas = valorInicial
+  let lucroJaTributadoComeCotas = 0
   for (let mes = 0; mes <= nMeses; mes++) {
     let valor: number
     if (taxaMensal === 0) {
@@ -140,15 +142,26 @@ export function calcular(params: InputParams): Resultado {
 
     if (aliquotaIR !== undefined || modoIR === "tabela" || modoIR === "fixo") {
       const lucroAcumulado = valor - (valorInicial + aporteMensal * mes)
-      if (comeCotas && mes > 0 && mes % 6 === 0 && lucroAcumulado > 0) {
-        const result = calcularIR(lucroAcumulado, mes * 30, aliquotaIR ?? null)
-        ir = result.valorIR
-        valorLiquido = valor - ir
-      } else if (mes === nMeses && lucroAcumulado > 0) {
-        const result = calcularIR(lucroAcumulado, mes * 30, aliquotaIR ?? null)
-        ir = result.valorIR
-        valorLiquido = valor - ir
+      if (mes === nMeses && lucroAcumulado > 0) {
+        const baseFinal = lucroAcumulado - lucroJaTributadoComeCotas
+        if (baseFinal > 0) {
+          const result = calcularIR(baseFinal, mes * 30, aliquotaIR ?? null)
+          ir = result.valorIR
+        }
       }
+      if (mes === nMeses) {
+        const irTotalAteAgora = evolucao.reduce((sum, e) => sum + (e.ir ?? 0), 0) + ir
+        valorLiquido = valor - irTotalAteAgora
+      }
+    }
+    if (comeCotas && mes > 0 && mes < nMeses && mes % 6 === 0) {
+      const ganhoSemestre = Math.max(0, valor - baseComeCotas)
+      if (ganhoSemestre > 0) {
+        ir += Math.round(ganhoSemestre * 15) / 100
+        lucroJaTributadoComeCotas += ganhoSemestre
+      }
+      baseComeCotas = valor
+      valorLiquido = valor - ir
     }
 
     evolucao.push({ mes, valor: Math.round(valor * 100) / 100, aporte, ir, valorLiquido })
@@ -174,7 +187,7 @@ export function calcular(params: InputParams): Resultado {
     for (let i = 0; i < evolucao.length; i++) {
       evolucao[i].valorCorrigido = corrigidos[i].valorCorrigido
     }
-    totalCorrigido = Math.round((totalBruto / Math.pow(1 + inflacaoMensal, nMeses)) * 100) / 100
+    totalCorrigido = evolucao[nMeses].valorCorrigido ?? totalBruto
   }
 
   let mesesParaMeta: number | undefined

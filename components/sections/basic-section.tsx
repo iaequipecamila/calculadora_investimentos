@@ -21,10 +21,12 @@ export function BasicSection({ valorInicial, aporteMensal, taxa, onTaxaChange, t
       <div className="space-y-2">
         <Label htmlFor="valorInicial">Valor Inicial</Label>
         <Input id="valorInicial" type="text" inputMode="numeric" value={valorInicial.display} onChange={valorInicial.onChange} placeholder="R$ 0,00" />
+        <p className="text-[0.6rem]" style={{ color: '#9A9083' }}>Quanto você já tem guardado para começar</p>
       </div>
       <div className="space-y-2">
         <Label htmlFor="aporteMensal">Aporte Mensal</Label>
         <Input id="aporteMensal" type="text" inputMode="numeric" value={aporteMensal.display} onChange={aporteMensal.onChange} placeholder="R$ 0,00" />
+        <p className="text-[0.6rem]" style={{ color: '#9A9083' }}>Quanto você pretende investir todo mês</p>
       </div>
       <div className="space-y-2">
         <Label htmlFor="taxa">Taxa de Juros</Label>
@@ -36,10 +38,12 @@ export function BasicSection({ valorInicial, aporteMensal, taxa, onTaxaChange, t
             <span className="font-medium" style={{ color: taxaTipo === "mes" ? '#A67C4E' : '#6E6558' }}>mês</span>
           </div>
         </div>
+        <p className="text-[0.6rem]" style={{ color: '#9A9083' }}>Rentabilidade esperada do investimento (ex: CDI, poupança, ações)</p>
       </div>
       <div className="space-y-2">
         <Label htmlFor="periodo">Período ({taxaTipo === "ano" ? "anos" : "meses"})</Label>
         <Input id="periodo" type="text" inputMode="numeric" value={periodo} onChange={(e) => onPeriodoChange(e.target.value)} placeholder={taxaTipo === "ano" ? "10" : "120"} />
+        <p className="text-[0.6rem]" style={{ color: '#9A9083' }}>Horizonte da simulação</p>
       </div>
     </>
   )

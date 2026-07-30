@@ -9,12 +9,6 @@ function formatCurrency(value: number): string {
   }).format(value)
 }
 
-function parseCurrencyDisplay(display: string): number {
-  const digits = display.replace(/\D/g, "")
-  if (!digits) return 0
-  return parseInt(digits, 10) / 100
-}
-
 export function useCurrencyInput(initialValue = 0) {
   const [rawValue, setRawValue] = useState(initialValue)
   const [display, setDisplay] = useState(formatCurrency(initialValue))
