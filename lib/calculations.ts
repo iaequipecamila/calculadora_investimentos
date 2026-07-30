@@ -120,7 +120,12 @@ export function calcular(params: InputParams): Resultado {
 
   const taxaDecimal = taxa / 100
   const taxaMensal = taxaTipo === "ano" ? Math.pow(1 + taxaDecimal, 1 / 12) - 1 : taxaDecimal
-  const nMeses = periodoTipo === "anos" ? periodo * 12 : periodo
+  let nMeses = periodoTipo === "anos" ? periodo * 12 : periodo
+
+  if (modoMeta && valorMeta && nMeses === 0) {
+    const meta = calcularMeta(valorMeta, valorInicial, aporteMensal, taxaMensal)
+    if (meta.viavel && meta.meses > 0) nMeses = meta.meses
+  }
 
   const evolucao: EvolucaoMes[] = []
   let baseComeCotas = valorInicial
