@@ -6,6 +6,7 @@ import { ResultsCards } from "@/components/results-cards"
 import { EvolutionChart } from "@/components/evolution-chart"
 import { ScenarioTabs } from "@/components/scenario-tabs"
 import { DetailTable } from "@/components/detail-table"
+import { CompositionChart } from "@/components/composition-chart"
 import { calcular } from "@/lib/calculations"
 import type { InputParams, Resultado } from "@/lib/calculations"
 
@@ -75,6 +76,10 @@ export default function Home() {
                     </h2>
                     <EvolutionChart data={cenarioAtivo.resultado.evolucao} inflacaoAtiva={!!cenarioAtivo.resultado.totalCorrigido} />
                   </div>
+                  <CompositionChart
+                    totalInvestido={cenarioAtivo.resultado.totalInvestido}
+                    jurosGanhos={cenarioAtivo.resultado.jurosGanhos}
+                  />
                   <DetailTable evolucao={cenarioAtivo.resultado.evolucao} inflacaoAtiva={!!cenarioAtivo.resultado.totalCorrigido} />
                 </>
               )}
