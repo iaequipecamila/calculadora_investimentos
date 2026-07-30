@@ -19,7 +19,7 @@ export default function Home() {
     <main className="min-h-screen bg-stone-100 py-8 px-4">
       <div className="max-w-[480px] mx-auto space-y-6">
         <h1 className="text-xl font-bold text-stone-900 text-center">
-          Calculadora de Investimentos
+          💰 Calculadora de Investimentos
         </h1>
 
         <InvestmentForm onSimular={handleSimular} />
