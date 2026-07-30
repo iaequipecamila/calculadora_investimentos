@@ -126,11 +126,9 @@ describe("calcularAporteNecessario", () => {
     expect(result).toBeNull()
   })
 
-  it("retorna null se pmt calculado for negativo", () => {
-    // meta menor que valor inicial já com juros →
-    // não precisa aportar, já é atingida
-    const result = calcularAporteNecessario(1000, 5000, 60, 0.01)
-    expect(result).toBe(0) // coberto pelo gate valorInicial >= valorDesejado
+  it("retorna null se pmt calculado for negativo (valor inicial já ultrapassa meta com juros)", () => {
+    const result = calcularAporteNecessario(10000, 5000, 120, 0.01)
+    expect(result).toBeNull()
   })
 })
 ```

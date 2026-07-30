@@ -1,0 +1,174 @@
+# Review package: 64a1b9c..30425ce
+
+## Commits
+30425ce feat: add calcularAporteNecessario function and Resultado.aporteNecessario
+
+## Files changed
+ lib/calculations.test.ts | 34 +++++++++++++++++++++++++++++++++-
+ lib/calculations.ts      | 33 +++++++++++++++++++++++++++++++++
+ 2 files changed, 66 insertions(+), 1 deletion(-)
+
+## Diff
+diff --git a/lib/calculations.test.ts b/lib/calculations.test.ts
+index 08ca0c0..d127ee3 100644
+--- a/lib/calculations.test.ts
++++ b/lib/calculations.test.ts
+@@ -1,11 +1,11 @@
+-import { calcular, calcularIR, calcularInflacao, rentabilidadeReal, calcularMeta } from "./calculations"
++import { calcular, calcularIR, calcularInflacao, rentabilidadeReal, calcularMeta, calcularAporteNecessario } from "./calculations"
+ 
+ describe("calcularIR", () => {
+   it("aplica aliquota fixa de 15% sobre o lucro", () => {
+     const result = calcularIR(100000, 720, 15)
+     expect(result.valorIR).toBe(15000)
+     expect(result.aliquota).toBe(15)
+   })
+ 
+   it("usa tabela regressiva quando aliquotaFixa ├® null", () => {
+     // 100 dias ÔåÆ 22,5%
+@@ -95,10 +95,42 @@ describe("calcular (estendido)", () => {
+       taxa: 12,
+       taxaTipo: "ano",
+       periodo: 60,
+       periodoTipo: "meses",
+       modoMeta: true,
+       valorMeta: 50000,
+     })
+     expect(result.mesesParaMeta).toBeDefined()
+   })
+ })
++
++describe("calcularAporteNecessario", () => {
++  it("calcula aporte necess├írio para atingir meta em n meses", () => {
++    const result = calcularAporteNecessario(50000, 1000, 60, 0.01)
++    expect(result).toBeCloseTo(589.98, 1)
++  })
++
++  it("retorna 0 se valor inicial j├í >= valor desejado", () => {
++    const result = calcularAporteNecessario(1000, 5000, 60, 0.01)
++    expect(result).toBe(0)
++  })
++
++  it("retorna null se nMeses <= 0", () => {
++    const result = calcularAporteNecessario(50000, 1000, 0, 0.01)
++    expect(result).toBeNull()
++  })
++
++  it("usa divis├úo simples quando taxa ├® 0", () => {
++    const result = calcularAporteNecessario(50000, 1000, 60, 0)
++    expect(result).toBeCloseTo(816.67, 1)
++  })
++
++  it("retorna null se fator de crescimento ├® infinito", () => {
++    const result = calcularAporteNecessario(1e308, 0, 1e6, 0.1)
++    expect(result).toBeNull()
++  })
++
++  it("retorna null se pmt calculado for negativo (valor inicial j├í ultrapassa meta com juros)", () => {
++    const result = calcularAporteNecessario(10000, 5000, 120, 0.01)
++    expect(result).toBeNull()
++  })
++})
+diff --git a/lib/calculations.ts b/lib/calculations.ts
+index 004b517..cf3344e 100644
+--- a/lib/calculations.ts
++++ b/lib/calculations.ts
+@@ -26,20 +26,21 @@ export interface Resultado {
+   totalBruto: number
+   totalInvestido: number
+   jurosGanhos: number
+   evolucao: EvolucaoMes[]
+   totalLiquido: number
+   totalIR: number
+   aliquotaIREfetiva: number
+   totalCorrigido: number
+   mesesParaMeta?: number
+   metaViavel?: boolean
++  aporteNecessario?: number | null
+ }
+ 
+ export function calcularIR(lucro: number, dias: number, aliquotaFixa: number | null): { aliquota: number; valorIR: number } {
+   if (lucro <= 0) return { aliquota: 0, valorIR: 0 }
+   let aliquota: number
+   if (aliquotaFixa !== null) {
+     aliquota = aliquotaFixa
+   } else if (dias < 180) {
+     aliquota = 22.5
+   } else if (dias < 360) {
+@@ -59,20 +60,46 @@ export function calcularInflacao(
+   return valores.map((item) => {
+     const fatorCorrecao = Math.pow(1 + taxaMensalInflacao, item.mes)
+     return { ...item, valorCorrigido: Math.round((item.valor / fatorCorrecao) * 100) / 100 }
+   })
+ }
+ 
+ export function rentabilidadeReal(taxaNominal: number, taxaInflacao: number): number {
+   return (1 + taxaNominal) / (1 + taxaInflacao) - 1
+ }
+ 
++export function calcularAporteNecessario(
++  valorDesejado: number,
++  valorInicial: number,
++  nMeses: number,
++  taxaMensal: number
++): number | null {
++  if (nMeses <= 0) return null
++  if (valorInicial >= valorDesejado) return 0
++
++  if (taxaMensal === 0) {
++    const pmt = (valorDesejado - valorInicial) / nMeses
++    return Math.round(pmt * 100) / 100
++  }
++
++  const fatorCrescimento = Math.pow(1 + taxaMensal, nMeses)
++  if (!isFinite(fatorCrescimento)) return null
++
++  const numerador = (valorDesejado - valorInicial * fatorCrescimento) * taxaMensal
++  const denominador = fatorCrescimento - 1
++  if (denominador === 0) return null
++
++  const pmt = numerador / denominador
++  if (!isFinite(pmt) || pmt < 0) return null
++  return Math.round(pmt * 100) / 100
++}
++
+ export function calcularMeta(
+   valorDesejado: number,
+   valorInicial: number,
+   aporteMensal: number,
+   taxaMensal: number
+ ): { meses: number; viavel: boolean } {
+   if (taxaMensal === 0) {
+     if (aporteMensal <= 0) return { meses: 0, viavel: false }
+     const meses = Math.ceil((valorDesejado - valorInicial) / aporteMensal)
+     return { meses: Math.max(0, meses), viavel: true }
+@@ -151,23 +178,29 @@ export function calcular(params: InputParams): Resultado {
+   }
+ 
+   let mesesParaMeta: number | undefined
+   let metaViavel: boolean | undefined
+   if (modoMeta && valorMeta) {
+     const meta = calcularMeta(valorMeta, valorInicial, aporteMensal, taxaMensal)
+     metaViavel = meta.viavel
+     mesesParaMeta = meta.viavel && meta.meses > 0 ? meta.meses : undefined
+   }
+ 
++  let aporteNecessario: number | null | undefined
++  if (modoMeta && valorMeta && nMeses > 0) {
++    aporteNecessario = calcularAporteNecessario(valorMeta, valorInicial, nMeses, taxaMensal)
++  }
++
+   return {
+     totalBruto,
+     totalInvestido,
+     jurosGanhos,
+     evolucao,
+     totalLiquido,
+     totalIR,
+     aliquotaIREfetiva,
+     totalCorrigido,
+     mesesParaMeta,
+     metaViavel,
++    aporteNecessario,
+   }
+ }
