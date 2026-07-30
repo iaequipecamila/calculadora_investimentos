@@ -71,13 +71,13 @@ export function InvestmentForm({ onSimular }: InvestmentFormProps) {
             placeholder="12"
             className="flex-1"
           />
-          <div className="flex items-center gap-2 text-sm text-stone-500 shrink-0">
-            <span className={taxaTipo === "ano" ? "text-emerald-600 font-medium" : ""}>ano</span>
+          <div className="flex items-center gap-2 text-sm shrink-0" style={{ color: '#6E6558' }}>
+            <span className="font-medium" style={{ color: taxaTipo === "ano" ? '#A67C4E' : '#6E6558' }}>ano</span>
             <Switch
               checked={taxaTipo === "mes"}
               onCheckedChange={(v) => setTaxaTipo(v ? "mes" : "ano")}
             />
-            <span className={taxaTipo === "mes" ? "text-emerald-600 font-medium" : ""}>mês</span>
+            <span className="font-medium" style={{ color: taxaTipo === "mes" ? '#A67C4E' : '#6E6558' }}>mês</span>
           </div>
         </div>
       </div>
@@ -98,7 +98,8 @@ export function InvestmentForm({ onSimular }: InvestmentFormProps) {
 
       <Button
         onClick={handleSimular}
-        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white h-12 text-base font-semibold"
+        className="w-full h-12 text-base font-semibold hover:opacity-85"
+        style={{ backgroundColor: '#A67C4E', color: '#FFFFFF' }}
       >
         Simular
       </Button>

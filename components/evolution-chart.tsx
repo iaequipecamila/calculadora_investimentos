@@ -27,6 +27,8 @@ function formatYAxis(value: number): string {
   return value.toString()
 }
 
+const bronze = 'hsl(34, 35%, 48%)'
+
 export function EvolutionChart({ data }: EvolutionChartProps) {
   if (!data || data.length === 0) return null
 
@@ -35,7 +37,7 @@ export function EvolutionChart({ data }: EvolutionChartProps) {
       config={{
         valor: {
           label: "Patrimônio",
-          color: "hsl(var(--chart-1))",
+          color: bronze,
         },
       }}
       className="w-full h-72"
@@ -43,23 +45,23 @@ export function EvolutionChart({ data }: EvolutionChartProps) {
       <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="fillValor" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.3} />
-            <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.05} />
+            <stop offset="5%" stopColor={bronze} stopOpacity={0.3} />
+            <stop offset="95%" stopColor={bronze} stopOpacity={0.05} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" className="stroke-stone-200" />
+        <CartesianGrid strokeDasharray="3 3" stroke="#E3DCD0" />
         <XAxis
           dataKey="mes"
           tickLine={false}
           axisLine={false}
           tickFormatter={(v) => v.toString()}
-          className="text-xs text-stone-400"
+          style={{ fontSize: '12px', fill: '#9A9083' }}
         />
         <YAxis
           tickLine={false}
           axisLine={false}
           tickFormatter={formatYAxis}
-          className="text-xs text-stone-400"
+          style={{ fontSize: '12px', fill: '#9A9083' }}
           width={50}
         />
         <ChartTooltip
@@ -72,7 +74,7 @@ export function EvolutionChart({ data }: EvolutionChartProps) {
         <Area
           type="monotone"
           dataKey="valor"
-          stroke="hsl(var(--chart-1))"
+          stroke={bronze}
           strokeWidth={2}
           fill="url(#fillValor)"
         />
