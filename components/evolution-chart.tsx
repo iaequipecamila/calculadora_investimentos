@@ -10,6 +10,7 @@ import {
 
 interface EvolutionChartProps {
   data: { mes: number; valor: number }[]
+  inflacaoAtiva?: boolean
 }
 
 function formatBRL(value: number): string {
