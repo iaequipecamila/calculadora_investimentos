@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { InvestmentForm } from "@/components/investment-form"
 import { ResultsCards } from "@/components/results-cards"
 import { EvolutionChart } from "@/components/evolution-chart"
@@ -35,16 +35,17 @@ export default function Home() {
   }, [])
 
   const handleRemove = useCallback((id: string) => {
-    setCenarios((prev) => {
-      const next = prev.filter((c) => c.id !== id)
-      if (ativo === id && next.length > 0) setAtivo(next[next.length - 1].id)
-      return next
-    })
-  }, [ativo])
-
-  const handleRename = useCallback((id: string, nome: string) => {
-    setCenarios((prev) => prev.map((c) => (c.id === id ? { ...c, nome } : c)))
+    setCenarios((prev) => prev.filter((c) => c.id !== id))
   }, [])
+
+  useEffect(() => {
+    setAtivo((prev) => {
+      if (!cenarios.some((c) => c.id === prev)) {
+        return cenarios.length > 0 ? cenarios[cenarios.length - 1].id : "1"
+      }
+      return prev
+    })
+  }, [cenarios])
 
   const cenarioAtivo = cenarios.find((c) => c.id === ativo)
 
@@ -61,7 +62,6 @@ export default function Home() {
           onSelect={setAtivo}
           onAdd={handleAdd}
           onRemove={handleRemove}
-          onRename={handleRename}
         >
           {() => (
             <div className="space-y-5">

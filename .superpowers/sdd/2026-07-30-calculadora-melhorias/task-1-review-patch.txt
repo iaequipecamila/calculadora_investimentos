@@ -1,0 +1,324 @@
+726c119 feat: add IR, inflation, goal, and CDI calculations
+ lib/calculations.test.ts | 104 +++++++++++++++++++++++++++++++
+ lib/calculations.ts      | 156 +++++++++++++++++++++++++++++++++++++++++------
+ vitest.config.mts        |   7 +++
+ 3 files changed, 247 insertions(+), 20 deletions(-)
+---
+diff --git a/lib/calculations.test.ts b/lib/calculations.test.ts
+new file mode 100644
+index 0000000..a7eaa7c
+--- /dev/null
++++ b/lib/calculations.test.ts
+@@ -0,0 +1,104 @@
++import { calcular, calcularIR, calcularInflacao, rentabilidadeReal, calcularMeta } from "./calculations"
++
++describe("calcularIR", () => {
++  it("aplica aliquota fixa de 15% sobre o lucro", () => {
++    const result = calcularIR(100000, 720, 15)
++    expect(result.valorIR).toBe(15000)
++    expect(result.aliquota).toBe(15)
++  })
++
++  it("usa tabela regressiva quando aliquotaFixa ├® null", () => {
++    // 100 dias ÔåÆ 22,5%
++    const result = calcularIR(10000, 100, null)
++    expect(result.aliquota).toBe(22.5)
++    expect(result.valorIR).toBe(2250)
++  })
++
++  it("usa 15% para 730 dias", () => {
++    const result = calcularIR(10000, 730, null)
++    expect(result.aliquota).toBe(15)
++    expect(result.valorIR).toBe(1500)
++  })
++
++  it("retorna 0 quando lucro ├® 0", () => {
++    const result = calcularIR(0, 100, 15)
++    expect(result.valorIR).toBe(0)
++  })
++})
++
++describe("calcularInflacao", () => {
++  it("corrige array de valores pela infla├º├úo mensal", () => {
++    // infla├º├úo 1% ao m├¬s
++    const valores = [
++      { mes: 0, valor: 1000 },
++      { mes: 1, valor: 1100 },
++    ]
++    const result = calcularInflacao(valores, 0.01)
++    expect(result[0].valorCorrigido).toBeCloseTo(1000)
++    expect(result[1].valorCorrigido).toBeCloseTo(1089.11, 1)
++  })
++})
++
++describe("rentabilidadeReal", () => {
++  it("calcula taxa real com infla├º├úo usando f├│rmula de Fisher", () => {
++    const result = rentabilidadeReal(0.12, 0.06)
++    expect(result).toBeCloseTo(0.0566, 3)
++  })
++})
++
++describe("calcularMeta", () => {
++  it("retorna meses necess├írios para atingir a meta", () => {
++    const result = calcularMeta(50000, 1000, 500, 0.01)
++    expect(result.meses).toBeGreaterThan(0)
++    expect(result.viavel).toBe(true)
++  })
++
++  it("retorna viavel=false se aporte ├® insuficiente mesmo sem prazo", () => {
++    const result = calcularMeta(1_000_000, 0, 100, 0.01)
++    expect(result.viavel).toBe(false)
++  })
++})
++
++describe("calcular (estendido)", () => {
++  it("calcula IR quando aliquota ├® fornecida", () => {
++    const result = calcular({
++      valorInicial: 10000,
++      aporteMensal: 1000,
++      taxa: 12,
++      taxaTipo: "ano",
++      periodo: 12,
++      periodoTipo: "meses",
++      modoIR: "fixo",
++      aliquotaIR: 15,
++    })
++    expect(result.totalIR).toBeGreaterThan(0)
++    expect(result.totalLiquido).toBe(result.totalBruto - result.totalIR)
++  })
++
++  it("calcula infla├º├úo quando taxa ├® fornecida", () => {
++    const result = calcular({
++      valorInicial: 10000,
++      aporteMensal: 1000,
++      taxa: 12,
++      taxaTipo: "ano",
++      periodo: 12,
++      periodoTipo: "meses",
++      taxaInflacao: 6,
++    })
++    expect(result.totalCorrigido).toBeLessThan(result.totalBruto)
++  })
++
++  it("calcula meta quando modoMeta ├® true", () => {
++    const result = calcular({
++      valorInicial: 1000,
++      aporteMensal: 500,
++      taxa: 12,
++      taxaTipo: "ano",
++      periodo: 60,
++      periodoTipo: "meses",
++      modoMeta: true,
++      valorMeta: 50000,
++    })
++    expect(result.mesesParaMeta).toBeDefined()
++  })
++})
+diff --git a/lib/calculations.ts b/lib/calculations.ts
+index 7bd98ae..2955d72 100644
+--- a/lib/calculations.ts
++++ b/lib/calculations.ts
+@@ -1,54 +1,170 @@
+ export interface InputParams {
+   valorInicial: number
+   aporteMensal: number
+   taxa: number
+   taxaTipo: "ano" | "mes"
+   periodo: number
+   periodoTipo: "anos" | "meses"
++  aliquotaIR?: number
++  modoIR?: "fixo" | "tabela"
++  comeCotas?: boolean
++  taxaInflacao?: number
++  modoMeta?: boolean
++  valorMeta?: number
++}
++
++export interface EvolucaoMes {
++  mes: number
++  valor: number
++  aporte: number
++  ir?: number
++  valorLiquido?: number
++  valorCorrigido?: number
+ }
+ 
+ export interface Resultado {
+   totalBruto: number
+   totalInvestido: number
+   jurosGanhos: number
+-  evolucao: { mes: number; valor: number }[]
++  evolucao: EvolucaoMes[]
++  totalLiquido: number
++  totalIR: number
++  aliquotaIREfetiva: number
++  totalCorrigido: number
++  mesesParaMeta?: number
++}
++
++export function calcularIR(lucro: number, meses: number, aliquotaFixa: number | null): { aliquota: number; valorIR: number } {
++  if (lucro <= 0) return { aliquota: 0, valorIR: 0 }
++  let aliquota: number
++  if (aliquotaFixa !== null) {
++    aliquota = aliquotaFixa
++  } else if (meses < 180) {
++    aliquota = 22.5
++  } else if (meses < 360) {
++    aliquota = 20
++  } else if (meses < 720) {
++    aliquota = 17.5
++  } else {
++    aliquota = 15
++  }
++  return { aliquota, valorIR: Math.round(lucro * aliquota) / 100 }
++}
++
++export function calcularInflacao(
++  valores: { mes: number; valor: number }[],
++  taxaMensalInflacao: number
++): { mes: number; valor: number; valorCorrigido: number }[] {
++  return valores.map((item) => {
++    const fatorCorrecao = Math.pow(1 + taxaMensalInflacao, item.mes)
++    return { ...item, valorCorrigido: Math.round((item.valor / fatorCorrecao) * 100) / 100 }
++  })
++}
++
++export function rentabilidadeReal(taxaNominal: number, taxaInflacao: number): number {
++  return (1 + taxaNominal) / (1 + taxaInflacao) - 1
++}
++
++export function calcularMeta(
++  valorDesejado: number,
++  valorInicial: number,
++  aporteMensal: number,
++  taxaMensal: number
++): { meses: number; viavel: boolean } {
++  if (valorInicial + aporteMensal * 1200 < valorDesejado) {
++    return { meses: 0, viavel: false }
++  }
++  if (taxaMensal === 0) {
++    if (aporteMensal <= 0) return { meses: 0, viavel: false }
++    const meses = Math.ceil((valorDesejado - valorInicial) / aporteMensal)
++    return { meses: Math.max(0, meses), viavel: true }
++  }
++  const pmtR = aporteMensal / taxaMensal
++  const fator = (valorDesejado + pmtR) / (valorInicial + pmtR)
++  if (fator <= 0) return { meses: 0, viavel: false }
++  const n = Math.log(fator) / Math.log(1 + taxaMensal)
++  if (!isFinite(n) || n < 0) return { meses: 0, viavel: false }
++  return { meses: Math.ceil(n), viavel: true }
+ }
+ 
+ export function calcular(params: InputParams): Resultado {
+-  const { valorInicial, aporteMensal, taxa, taxaTipo, periodo, periodoTipo } = params
++  const { valorInicial, aporteMensal, taxa, taxaTipo, periodo, periodoTipo, aliquotaIR, modoIR, comeCotas, taxaInflacao, modoMeta, valorMeta } = params
+ 
+   const taxaDecimal = taxa / 100
+   const taxaMensal = taxaTipo === "ano" ? Math.pow(1 + taxaDecimal, 1 / 12) - 1 : taxaDecimal
+   const nMeses = periodoTipo === "anos" ? periodo * 12 : periodo
+ 
+-  let totalBruto: number
+-  if (taxaMensal === 0) {
+-    totalBruto = valorInicial + aporteMensal * nMeses
+-  } else {
+-    totalBruto =
+-      valorInicial * Math.pow(1 + taxaMensal, nMeses) +
+-      aporteMensal * ((Math.pow(1 + taxaMensal, nMeses) - 1) / taxaMensal)
+-  }
+-
+-  const totalInvestido = valorInicial + aporteMensal * nMeses
+-  const jurosGanhos = totalBruto - totalInvestido
++  const evolucao: EvolucaoMes[] = []
++  let ultimoValor = valorInicial
+ 
+-  const evolucao: { mes: number; valor: number }[] = []
+   for (let mes = 0; mes <= nMeses; mes++) {
++    let valor: number
+     if (taxaMensal === 0) {
+-      evolucao.push({ mes, valor: valorInicial + aporteMensal * mes })
++      valor = valorInicial + aporteMensal * mes
+     } else {
+-      const valor =
++      valor =
+         valorInicial * Math.pow(1 + taxaMensal, mes) +
+         aporteMensal * ((Math.pow(1 + taxaMensal, mes) - 1) / taxaMensal)
+-      evolucao.push({ mes, valor })
+     }
++
++    const aporte = mes === 0 ? 0 : aporteMensal
++
++    let ir = 0
++    let valorLiquido: number | undefined
++
++    if (aliquotaIR !== undefined || modoIR === "tabela" || modoIR === "fixo") {
++      const lucroAcumulado = valor - (valorInicial + aporteMensal * mes)
++      if (comeCotas && mes > 0 && mes % 6 === 0 && lucroAcumulado > 0) {
++        const result = calcularIR(lucroAcumulado, mes, aliquotaIR ?? null)
++        ir = result.valorIR
++        valorLiquido = valor - ir
++      } else if (mes === nMeses && lucroAcumulado > 0) {
++        const result = calcularIR(lucroAcumulado, mes, aliquotaIR ?? null)
++        ir = result.valorIR
++        valorLiquido = valor - ir
++      }
++    }
++
++    evolucao.push({ mes, valor: Math.round(valor * 100) / 100, aporte, ir, valorLiquido })
++  }
++
++  const totalBruto = evolucao[nMeses].valor
++  const totalInvestido = Math.round((valorInicial + aporteMensal * nMeses) * 100) / 100
++  const jurosGanhos = Math.round((totalBruto - totalInvestido) * 100) / 100
++
++  let totalIR = 0
++  for (const e of evolucao) {
++    totalIR += e.ir ?? 0
++  }
++  totalIR = Math.round(totalIR * 100) / 100
++  const totalLiquido = Math.round((totalBruto - totalIR) * 100) / 100
++
++  const aliquotaIREfetiva = totalIR > 0 && jurosGanhos > 0 ? Math.round((totalIR / jurosGanhos) * 10000) / 100 : 0
++
++  let totalCorrigido = totalBruto
++  if (taxaInflacao) {
++    const inflacaoMensal = Math.pow(1 + taxaInflacao / 100, 1 / 12) - 1
++    const corrigidos = calcularInflacao(evolucao.map((e) => ({ mes: e.mes, valor: e.valor })), inflacaoMensal)
++    for (let i = 0; i < evolucao.length; i++) {
++      evolucao[i].valorCorrigido = corrigidos[i].valorCorrigido
++    }
++    totalCorrigido = Math.round((totalBruto / Math.pow(1 + inflacaoMensal, nMeses)) * 100) / 100
++  }
++
++  let mesesParaMeta: number | undefined
++  if (modoMeta && valorMeta) {
++    mesesParaMeta = calcularMeta(valorMeta, valorInicial, aporteMensal, taxaMensal).meses
+   }
+ 
+   return {
+-    totalBruto: Math.round(totalBruto * 100) / 100,
+-    totalInvestido: Math.round(totalInvestido * 100) / 100,
+-    jurosGanhos: Math.round(jurosGanhos * 100) / 100,
++    totalBruto,
++    totalInvestido,
++    jurosGanhos,
+     evolucao,
++    totalLiquido,
++    totalIR,
++    aliquotaIREfetiva,
++    totalCorrigido,
++    mesesParaMeta,
+   }
+ }
+diff --git a/vitest.config.mts b/vitest.config.mts
+new file mode 100644
+index 0000000..b120c83
+--- /dev/null
++++ b/vitest.config.mts
+@@ -0,0 +1,7 @@
++import { defineConfig } from 'vitest/config'
++export default defineConfig({
++  test: {
++    environment: 'node',
++    globals: true,
++  },
++})

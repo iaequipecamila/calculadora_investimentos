@@ -13,7 +13,6 @@ interface ScenarioTabsProps {
   onSelect: (id: string) => void
   onAdd: () => void
   onRemove: (id: string) => void
-  onRename: (id: string, nome: string) => void
   children: (tab: ScenarioTab) => ReactNode
 }
 

@@ -1,0 +1,167 @@
+ef199cc refactor: integrate collapsible form sections into InvestmentForm
+ components/investment-form.tsx | 114 ++++++++++++++++++-----------------------
+ 1 file changed, 51 insertions(+), 63 deletions(-)
+---
+diff --git a/components/investment-form.tsx b/components/investment-form.tsx
+index 29023ef..92446c5 100644
+--- a/components/investment-form.tsx
++++ b/components/investment-form.tsx
+@@ -1,107 +1,95 @@
+ "use client"
+ 
+-import { useState } from "react"
++import { useState, useCallback } from "react"
+ import { Button } from "@/components/ui/button"
+-import { Input } from "@/components/ui/input"
+-import { Label } from "@/components/ui/label"
+-import { Switch } from "@/components/ui/switch"
++import { BasicSection } from "@/components/sections/basic-section"
++import { IrSection } from "@/components/sections/ir-section"
++import { InflationSection } from "@/components/sections/inflation-section"
++import { GoalSection } from "@/components/sections/goal-section"
+ import { useCurrencyInput } from "@/hooks/use-currency-input"
+-import type { InputParams } from "@/lib/calculations"
++import type { InputParams, Resultado } from "@/lib/calculations"
+ 
+ interface InvestmentFormProps {
+   onSimular: (params: InputParams) => void
++  resultado?: Resultado | null
+ }
+ 
+-export function InvestmentForm({ onSimular }: InvestmentFormProps) {
++export function InvestmentForm({ onSimular, resultado }: InvestmentFormProps) {
+   const valorInicial = useCurrencyInput(0)
+   const aporteMensal = useCurrencyInput(0)
++  const valorMeta = useCurrencyInput(0)
+   const [taxa, setTaxa] = useState("")
+   const [periodo, setPeriodo] = useState("")
+   const [taxaTipo, setTaxaTipo] = useState<"ano" | "mes">("ano")
++  const [modoIR, setModoIR] = useState<"fixo" | "tabela">("tabela")
++  const [aliquotaIR, setAliquotaIR] = useState("")
++  const [comeCotas, setComeCotas] = useState(false)
++  const [inflacaoAtiva, setInflacaoAtiva] = useState(false)
++  const [taxaInflacao, setTaxaInflacao] = useState("")
++  const [metaAtiva, setMetaAtiva] = useState(false)
+ 
+   const periodoTipo = taxaTipo === "ano" ? "anos" : "meses"
+ 
+-  function handleSimular() {
++  const handleSimular = useCallback(() => {
+     const params: InputParams = {
+       valorInicial: valorInicial.rawValue,
+       aporteMensal: aporteMensal.rawValue,
+       taxa: parseFloat(taxa.replace(",", ".")) || 0,
+       taxaTipo,
+       periodo: parseInt(periodo, 10) || 0,
+       periodoTipo,
++      ...(modoIR === "tabela" ? { modoIR: "tabela" as const, comeCotas } : { modoIR: "fixo" as const, aliquotaIR: parseFloat(aliquotaIR.replace(",", ".")) || 0, comeCotas }),
++      ...(inflacaoAtiva && parseFloat(taxaInflacao) > 0 ? { taxaInflacao: parseFloat(taxaInflacao.replace(",", ".")) } : {}),
++      ...(metaAtiva && valorMeta.rawValue > 0 ? { modoMeta: true as const, valorMeta: valorMeta.rawValue } : {}),
+     }
+     onSimular(params)
+-  }
++  }, [valorInicial.rawValue, aporteMensal.rawValue, taxa, taxaTipo, periodo, periodoTipo, modoIR, aliquotaIR, comeCotas, inflacaoAtiva, taxaInflacao, metaAtiva, valorMeta.rawValue, onSimular])
+ 
+   return (
+     <div className="space-y-5">
+-      <div className="space-y-2">
+-        <Label htmlFor="valorInicial">Valor Inicial</Label>
+-        <Input
+-          id="valorInicial"
+-          type="text"
+-          inputMode="numeric"
+-          value={valorInicial.display}
+-          onChange={valorInicial.onChange}
+-          placeholder="R$ 0,00"
++      <div className="space-y-4">
++        <BasicSection
++          valorInicial={valorInicial}
++          aporteMensal={aporteMensal}
++          taxa={taxa}
++          onTaxaChange={setTaxa}
++          taxaTipo={taxaTipo}
++          onTaxaTipoChange={setTaxaTipo}
++          periodo={periodo}
++          onPeriodoChange={setPeriodo}
+         />
+       </div>
+ 
+-      <div className="space-y-2">
+-        <Label htmlFor="aporteMensal">Aporte Mensal</Label>
+-        <Input
+-          id="aporteMensal"
+-          type="text"
+-          inputMode="numeric"
+-          value={aporteMensal.display}
+-          onChange={aporteMensal.onChange}
+-          placeholder="R$ 0,00"
+-        />
+-      </div>
++      <IrSection
++        aliquotaIR={aliquotaIR}
++        onAliquotaIRChange={setAliquotaIR}
++        modoIR={modoIR}
++        onModoIRChange={setModoIR}
++        comeCotas={comeCotas}
++        onComeCotasChange={setComeCotas}
++      />
+ 
+-      <div className="space-y-2">
+-        <Label htmlFor="taxa">Taxa de Juros</Label>
+-        <div className="flex items-center gap-3">
+-          <Input
+-            id="taxa"
+-            type="text"
+-            inputMode="decimal"
+-            value={taxa}
+-            onChange={(e) => setTaxa(e.target.value)}
+-            placeholder="12"
+-            className="flex-1"
+-          />
+-          <div className="flex items-center gap-2 text-sm shrink-0" style={{ color: '#6E6558' }}>
+-            <span className="font-medium" style={{ color: taxaTipo === "ano" ? '#A67C4E' : '#6E6558' }}>ano</span>
+-            <Switch
+-              checked={taxaTipo === "mes"}
+-              onCheckedChange={(v) => setTaxaTipo(v ? "mes" : "ano")}
+-            />
+-            <span className="font-medium" style={{ color: taxaTipo === "mes" ? '#A67C4E' : '#6E6558' }}>m├¬s</span>
+-          </div>
+-        </div>
+-      </div>
++      <InflationSection
++        taxaInflacao={taxaInflacao}
++        onTaxaInflacaoChange={setTaxaInflacao}
++        ativo={inflacaoAtiva}
++        onAtivoChange={setInflacaoAtiva}
++      />
+ 
+-      <div className="space-y-2">
+-        <Label htmlFor="periodo">
+-          Per├¡odo ({periodoTipo})
+-        </Label>
+-        <Input
+-          id="periodo"
+-          type="text"
+-          inputMode="numeric"
+-          value={periodo}
+-          onChange={(e) => setPeriodo(e.target.value)}
+-          placeholder={periodoTipo === "anos" ? "10" : "120"}
+-        />
+-      </div>
++      <GoalSection
++        valorMeta={valorMeta}
++        onValorMetaChange={valorMeta.onChange}
++        ativo={metaAtiva}
++        onAtivoChange={setMetaAtiva}
++        mesesParaMeta={resultado?.mesesParaMeta}
++      />
+ 
+       <Button
+         onClick={handleSimular}
+         className="w-full h-12 text-base font-semibold hover:opacity-85"
+         style={{ backgroundColor: '#A67C4E', color: '#FFFFFF' }}
+       >
+         Simular
+       </Button>
+     </div>
+   )

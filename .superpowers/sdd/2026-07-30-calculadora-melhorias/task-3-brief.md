@@ -1,3 +1,15 @@
+### Task 3: Refactor InvestmentForm
+
+**Files:**
+- Modify: `components/investment-form.tsx`
+
+**Interfaces:**
+- Consumes: Sections from Task 2, `InputParams` from Task 1
+- Produces: `InvestmentForm` component accepting `params: InputParams`, `resultado?: Resultado`, `onSimular: (params: InputParams) => void`
+
+- [ ] **Step 1: Rewrite `components/investment-form.tsx`**
+
+```tsx
 "use client"
 
 import { useState, useCallback } from "react"
@@ -38,7 +50,7 @@ export function InvestmentForm({ onSimular, resultado }: InvestmentFormProps) {
       taxaTipo,
       periodo: parseInt(periodo, 10) || 0,
       periodoTipo,
-      ...(modoIR === "tabela" ? { modoIR: "tabela" as const, ...(comeCotas ? { comeCotas: true } : {}) } : { modoIR: "fixo" as const, aliquotaIR: parseFloat(aliquotaIR.replace(",", ".")) || 0, ...(comeCotas ? { comeCotas: true } : {}) }),
+      ...(modoIR === "tabela" ? { modoIR: "tabela" as const, comeCotas } : { modoIR: "fixo" as const, aliquotaIR: parseFloat(aliquotaIR.replace(",", ".")) || 0, comeCotas }),
       ...(inflacaoAtiva && parseFloat(taxaInflacao) > 0 ? { taxaInflacao: parseFloat(taxaInflacao.replace(",", ".")) } : {}),
       ...(metaAtiva && valorMeta.rawValue > 0 ? { modoMeta: true as const, valorMeta: valorMeta.rawValue } : {}),
     }
@@ -94,3 +106,21 @@ export function InvestmentForm({ onSimular, resultado }: InvestmentFormProps) {
     </div>
   )
 }
+```
+
+- [ ] **Step 2: Verify build**
+
+```bash
+npm run build
+```
+
+Expected: no TypeScript or build errors
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add components/investment-form.tsx
+git commit -m "refactor: integrate collapsible form sections into InvestmentForm"
+```
+
+---
