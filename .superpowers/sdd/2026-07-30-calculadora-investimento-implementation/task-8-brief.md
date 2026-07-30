@@ -1,3 +1,14 @@
+### Task 8: Assemble Main Page
+
+**Files:**
+- Modify: `app/page.tsx`
+
+**Interfaces:**
+- Consumes: `InvestmentForm` from `@/components/investment-form`, `ResultsCards` from `@/components/results-cards`, `EvolutionChart` from `@/components/evolution-chart`, `calcular` from `@/lib/calculations`, types `InputParams` and `Resultado` from `@/lib/calculations`
+
+- [ ] **Step 1: Replace `app/page.tsx`**
+
+```tsx
 "use client"
 
 import { useState } from "react"
@@ -40,3 +51,18 @@ export default function Home() {
     </main>
   )
 }
+```
+
+- [ ] **Step 2: Verify with build and manual test**
+
+```bash
+npm run build
+```
+
+Then test manually: `npm run dev`, open `http://localhost:3000`, fill form, click "Simular", verify results and chart appear.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add -A && git commit -m "feat: assemble main page with all components"
+```
