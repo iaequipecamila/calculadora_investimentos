@@ -1,0 +1,912 @@
+# Review package: b22df40..de5f694
+
+## Commits
+de5f694 feat: add CompositionChart donut (aportes vs juros)
+
+## Files changed
+ .../sdd/2026-07-30-informacoes-ricas/progress.md   |   1 +
+ .../review-30425ce..b22df40.diff                   | 723 +++++++++++++++++++++
+ .../2026-07-30-informacoes-ricas/task-2-report.md  |  32 +
+ app/page.tsx                                       |   5 +
+ components/composition-chart.tsx                   |  67 ++
+ 5 files changed, 828 insertions(+)
+
+## Diff
+diff --git a/.superpowers/sdd/2026-07-30-informacoes-ricas/progress.md b/.superpowers/sdd/2026-07-30-informacoes-ricas/progress.md
+index 47e0f16..374a7fa 100644
+--- a/.superpowers/sdd/2026-07-30-informacoes-ricas/progress.md
++++ b/.superpowers/sdd/2026-07-30-informacoes-ricas/progress.md
+@@ -1,3 +1,4 @@
+ # SDD ledger ÔÇö plan: docs/superpowers/plans/2026-07-30-informacoes-ricas.md
+ 
+ Task 1: complete (commits 64a1b9c..30425ce, review clean)
++Task 2: complete (commits 30425ce..b22df40, review clean)
+diff --git a/.superpowers/sdd/2026-07-30-informacoes-ricas/review-30425ce..b22df40.diff b/.superpowers/sdd/2026-07-30-informacoes-ricas/review-30425ce..b22df40.diff
+new file mode 100644
+index 0000000..ab1dcc3
+--- /dev/null
++++ b/.superpowers/sdd/2026-07-30-informacoes-ricas/review-30425ce..b22df40.diff
+@@ -0,0 +1,723 @@
++# Review package: 30425ce..b22df40
++
++## Commits
++b22df40 feat: display aporteNecessario in GoalSection
++
++## Files changed
++ .../sdd/2026-07-30-informacoes-ricas/progress.md   |   3 +
++ .../review-64a1b9c..30425ce.diff                   | 174 +++++++++++++++++++++
++ .../2026-07-30-informacoes-ricas/task-1-brief.md   | 129 +++++++++++++++
++ .../2026-07-30-informacoes-ricas/task-1-report.md  |  39 +++++
++ .../2026-07-30-informacoes-ricas/task-2-brief.md   |  81 ++++++++++
++ .../2026-07-30-informacoes-ricas/task-3-brief.md   | 112 +++++++++++++
++ components/investment-form.tsx                     |   2 +
++ components/sections/goal-section.tsx               |  26 ++-
++ .../plans/2026-07-30-informacoes-ricas.md          |   8 +-
++ 9 files changed, 568 insertions(+), 6 deletions(-)
++
++## Diff
++diff --git a/.superpowers/sdd/2026-07-30-informacoes-ricas/progress.md b/.superpowers/sdd/2026-07-30-informacoes-ricas/progress.md
++new file mode 100644
++index 0000000..47e0f16
++--- /dev/null
+++++ b/.superpowers/sdd/2026-07-30-informacoes-ricas/progress.md
++@@ -0,0 +1,3 @@
+++# SDD ledger ├ö├ç├Â plan: docs/superpowers/plans/2026-07-30-informacoes-ricas.md
+++
+++Task 1: complete (commits 64a1b9c..30425ce, review clean)
++diff --git a/.superpowers/sdd/2026-07-30-informacoes-ricas/review-64a1b9c..30425ce.diff b/.superpowers/sdd/2026-07-30-informacoes-ricas/review-64a1b9c..30425ce.diff
++new file mode 100644
++index 0000000..636c5f0
++--- /dev/null
+++++ b/.superpowers/sdd/2026-07-30-informacoes-ricas/review-64a1b9c..30425ce.diff
++@@ -0,0 +1,174 @@
+++# Review package: 64a1b9c..30425ce
+++
+++## Commits
+++30425ce feat: add calcularAporteNecessario function and Resultado.aporteNecessario
+++
+++## Files changed
+++ lib/calculations.test.ts | 34 +++++++++++++++++++++++++++++++++-
+++ lib/calculations.ts      | 33 +++++++++++++++++++++++++++++++++
+++ 2 files changed, 66 insertions(+), 1 deletion(-)
+++
+++## Diff
+++diff --git a/lib/calculations.test.ts b/lib/calculations.test.ts
+++index 08ca0c0..d127ee3 100644
+++--- a/lib/calculations.test.ts
++++++ b/lib/calculations.test.ts
+++@@ -1,11 +1,11 @@
+++-import { calcular, calcularIR, calcularInflacao, rentabilidadeReal, calcularMeta } from "./calculations"
++++import { calcular, calcularIR, calcularInflacao, rentabilidadeReal, calcularMeta, calcularAporteNecessario } from "./calculations"
+++ 
+++ describe("calcularIR", () => {
+++   it("aplica aliquota fixa de 15% sobre o lucro", () => {
+++     const result = calcularIR(100000, 720, 15)
+++     expect(result.valorIR).toBe(15000)
+++     expect(result.aliquota).toBe(15)
+++   })
+++ 
+++   it("usa tabela regressiva quando aliquotaFixa ├ö├Â┬úÔö¼┬½ null", () => {
+++     // 100 dias Ôö£├ÂÔö£├æÔö£├Ñ 22,5%
+++@@ -95,10 +95,42 @@ describe("calcular (estendido)", () => {
+++       taxa: 12,
+++       taxaTipo: "ano",
+++       periodo: 60,
+++       periodoTipo: "meses",
+++       modoMeta: true,
+++       valorMeta: 50000,
+++     })
+++     expect(result.mesesParaMeta).toBeDefined()
+++   })
+++ })
++++
++++describe("calcularAporteNecessario", () => {
++++  it("calcula aporte necess├ö├Â┬úÔö£┬írio para atingir meta em n meses", () => {
++++    const result = calcularAporteNecessario(50000, 1000, 60, 0.01)
++++    expect(result).toBeCloseTo(589.98, 1)
++++  })
++++
++++  it("retorna 0 se valor inicial j├ö├Â┬úÔö£┬í >= valor desejado", () => {
++++    const result = calcularAporteNecessario(1000, 5000, 60, 0.01)
++++    expect(result).toBe(0)
++++  })
++++
++++  it("retorna null se nMeses <= 0", () => {
++++    const result = calcularAporteNecessario(50000, 1000, 0, 0.01)
++++    expect(result).toBeNull()
++++  })
++++
++++  it("usa divis├ö├Â┬úÔö£Ôòæo simples quando taxa ├ö├Â┬úÔö¼┬½ 0", () => {
++++    const result = calcularAporteNecessario(50000, 1000, 60, 0)
++++    expect(result).toBeCloseTo(816.67, 1)
++++  })
++++
++++  it("retorna null se fator de crescimento ├ö├Â┬úÔö¼┬½ infinito", () => {
++++    const result = calcularAporteNecessario(1e308, 0, 1e6, 0.1)
++++    expect(result).toBeNull()
++++  })
++++
++++  it("retorna null se pmt calculado for negativo (valor inicial j├ö├Â┬úÔö£┬í ultrapassa meta com juros)", () => {
++++    const result = calcularAporteNecessario(10000, 5000, 120, 0.01)
++++    expect(result).toBeNull()
++++  })
++++})
+++diff --git a/lib/calculations.ts b/lib/calculations.ts
+++index 004b517..cf3344e 100644
+++--- a/lib/calculations.ts
++++++ b/lib/calculations.ts
+++@@ -26,20 +26,21 @@ export interface Resultado {
+++   totalBruto: number
+++   totalInvestido: number
+++   jurosGanhos: number
+++   evolucao: EvolucaoMes[]
+++   totalLiquido: number
+++   totalIR: number
+++   aliquotaIREfetiva: number
+++   totalCorrigido: number
+++   mesesParaMeta?: number
+++   metaViavel?: boolean
++++  aporteNecessario?: number | null
+++ }
+++ 
+++ export function calcularIR(lucro: number, dias: number, aliquotaFixa: number | null): { aliquota: number; valorIR: number } {
+++   if (lucro <= 0) return { aliquota: 0, valorIR: 0 }
+++   let aliquota: number
+++   if (aliquotaFixa !== null) {
+++     aliquota = aliquotaFixa
+++   } else if (dias < 180) {
+++     aliquota = 22.5
+++   } else if (dias < 360) {
+++@@ -59,20 +60,46 @@ export function calcularInflacao(
+++   return valores.map((item) => {
+++     const fatorCorrecao = Math.pow(1 + taxaMensalInflacao, item.mes)
+++     return { ...item, valorCorrigido: Math.round((item.valor / fatorCorrecao) * 100) / 100 }
+++   })
+++ }
+++ 
+++ export function rentabilidadeReal(taxaNominal: number, taxaInflacao: number): number {
+++   return (1 + taxaNominal) / (1 + taxaInflacao) - 1
+++ }
+++ 
++++export function calcularAporteNecessario(
++++  valorDesejado: number,
++++  valorInicial: number,
++++  nMeses: number,
++++  taxaMensal: number
++++): number | null {
++++  if (nMeses <= 0) return null
++++  if (valorInicial >= valorDesejado) return 0
++++
++++  if (taxaMensal === 0) {
++++    const pmt = (valorDesejado - valorInicial) / nMeses
++++    return Math.round(pmt * 100) / 100
++++  }
++++
++++  const fatorCrescimento = Math.pow(1 + taxaMensal, nMeses)
++++  if (!isFinite(fatorCrescimento)) return null
++++
++++  const numerador = (valorDesejado - valorInicial * fatorCrescimento) * taxaMensal
++++  const denominador = fatorCrescimento - 1
++++  if (denominador === 0) return null
++++
++++  const pmt = numerador / denominador
++++  if (!isFinite(pmt) || pmt < 0) return null
++++  return Math.round(pmt * 100) / 100
++++}
++++
+++ export function calcularMeta(
+++   valorDesejado: number,
+++   valorInicial: number,
+++   aporteMensal: number,
+++   taxaMensal: number
+++ ): { meses: number; viavel: boolean } {
+++   if (taxaMensal === 0) {
+++     if (aporteMensal <= 0) return { meses: 0, viavel: false }
+++     const meses = Math.ceil((valorDesejado - valorInicial) / aporteMensal)
+++     return { meses: Math.max(0, meses), viavel: true }
+++@@ -151,23 +178,29 @@ export function calcular(params: InputParams): Resultado {
+++   }
+++ 
+++   let mesesParaMeta: number | undefined
+++   let metaViavel: boolean | undefined
+++   if (modoMeta && valorMeta) {
+++     const meta = calcularMeta(valorMeta, valorInicial, aporteMensal, taxaMensal)
+++     metaViavel = meta.viavel
+++     mesesParaMeta = meta.viavel && meta.meses > 0 ? meta.meses : undefined
+++   }
+++ 
++++  let aporteNecessario: number | null | undefined
++++  if (modoMeta && valorMeta && nMeses > 0) {
++++    aporteNecessario = calcularAporteNecessario(valorMeta, valorInicial, nMeses, taxaMensal)
++++  }
++++
+++   return {
+++     totalBruto,
+++     totalInvestido,
+++     jurosGanhos,
+++     evolucao,
+++     totalLiquido,
+++     totalIR,
+++     aliquotaIREfetiva,
+++     totalCorrigido,
+++     mesesParaMeta,
+++     metaViavel,
++++    aporteNecessario,
+++   }
+++ }
++diff --git a/.superpowers/sdd/2026-07-30-informacoes-ricas/task-1-brief.md b/.superpowers/sdd/2026-07-30-informacoes-ricas/task-1-brief.md
++new file mode 100644
++index 0000000..5dd2a06
++--- /dev/null
+++++ b/.superpowers/sdd/2026-07-30-informacoes-ricas/task-1-brief.md
++@@ -0,0 +1,129 @@
+++### Task 1: `calcularAporteNecessario` ├ö├ç├Â calculation + interface + tests
+++
+++**Files:**
+++- Modify: `lib/calculations.ts` (add function, update `Resultado` interface, update `calcular()` return)
+++- Test: `lib/calculations.test.ts`
+++
+++**Interfaces:**
+++- Produces: `export function calcularAporteNecessario(valorDesejado: number, valorInicial: number, nMeses: number, taxaMensal: number): number | null`
+++- Produces: `Resultado.aporteNecessario?: number | null`
+++- Consumes: existing `InputParams`, `Resultado`, `calcular()` patterns
+++
+++- [ ] **Step 1: Add `calcularAporteNecessario` to `lib/calculations.ts`**
+++
+++Insert after `calcularMeta`:
+++
+++```ts
+++export function calcularAporteNecessario(
+++  valorDesejado: number,
+++  valorInicial: number,
+++  nMeses: number,
+++  taxaMensal: number
+++): number | null {
+++  if (nMeses <= 0) return null
+++  if (valorInicial >= valorDesejado) return 0
+++
+++  if (taxaMensal === 0) {
+++    const pmt = (valorDesejado - valorInicial) / nMeses
+++    return Math.round(pmt * 100) / 100
+++  }
+++
+++  const fatorCrescimento = Math.pow(1 + taxaMensal, nMeses)
+++  if (!isFinite(fatorCrescimento)) return null
+++
+++  const numerador = (valorDesejado - valorInicial * fatorCrescimento) * taxaMensal
+++  const denominador = fatorCrescimento - 1
+++  if (denominador === 0) return null
+++
+++  const pmt = numerador / denominador
+++  if (!isFinite(pmt) || pmt < 0) return null
+++  return Math.round(pmt * 100) / 100
+++}
+++```
+++
+++- [ ] **Step 2: Add `aporteNecessario` to `Resultado` interface**
+++
+++```ts
+++export interface Resultado {
+++  ...
+++  mesesParaMeta?: number
+++  metaViavel?: boolean
+++  aporteNecessario?: number | null
+++}
+++```
+++
+++- [ ] **Step 3: Update `calcular()` to compute `aporteNecessario`**
+++
+++After the `metaViavel` block:
+++
+++```ts
+++let aporteNecessario: number | null | undefined
+++if (modoMeta && valorMeta && nMeses > 0) {
+++  aporteNecessario = calcularAporteNecessario(valorMeta, valorInicial, nMeses, taxaMensal)
+++}
+++```
+++
+++Add to return object:
+++
+++```ts
+++return {
+++  ...
+++  mesesParaMeta,
+++  metaViavel,
+++  aporteNecessario,
+++}
+++```
+++
+++- [ ] **Step 4: Write failing tests**
+++
+++Add to `lib/calculations.test.ts`:
+++
+++```ts
+++describe("calcularAporteNecessario", () => {
+++  it("calcula aporte necessÔö£├¡rio para atingir meta em n meses", () => {
+++    // PV=1000, FV=50000, n=60, r=1% ├ö├Ñ├å PMT ├ö├½├¬ 590
+++    const result = calcularAporteNecessario(50000, 1000, 60, 0.01)
+++    expect(result).toBeCloseTo(590.05, 1)
+++  })
+++
+++  it("retorna 0 se valor inicial jÔö£├¡ >= valor desejado", () => {
+++    const result = calcularAporteNecessario(1000, 5000, 60, 0.01)
+++    expect(result).toBe(0)
+++  })
+++
+++  it("retorna null se nMeses <= 0", () => {
+++    const result = calcularAporteNecessario(50000, 1000, 0, 0.01)
+++    expect(result).toBeNull()
+++  })
+++
+++  it("usa divisÔö£├║o simples quando taxa Ôö£┬« 0", () => {
+++    const result = calcularAporteNecessario(50000, 1000, 60, 0)
+++    expect(result).toBeCloseTo(816.67, 1)
+++  })
+++
+++  it("retorna null se fator de crescimento Ôö£┬« infinito", () => {
+++    const result = calcularAporteNecessario(1e308, 0, 1e6, 0.1)
+++    expect(result).toBeNull()
+++  })
+++
+++  it("retorna null se pmt calculado for negativo (valor inicial jÔö£├¡ ultrapassa meta com juros)", () => {
+++    const result = calcularAporteNecessario(10000, 5000, 120, 0.01)
+++    expect(result).toBeNull()
+++  })
+++})
+++```
+++
+++- [ ] **Step 5: Run tests**
+++
+++```bash
+++npx vitest run lib/calculations.test.ts
+++```
+++
+++Expected: 1 test file, all tests pass (~15 tests total).
+++
+++- [ ] **Step 6: Commit**
+++
+++```bash
+++git add .
+++git commit -m "feat: add calcularAporteNecessario function and Resultado.aporteNecessario"
+++```
++diff --git a/.superpowers/sdd/2026-07-30-informacoes-ricas/task-1-report.md b/.superpowers/sdd/2026-07-30-informacoes-ricas/task-1-report.md
++new file mode 100644
++index 0000000..c3865d6
++--- /dev/null
+++++ b/.superpowers/sdd/2026-07-30-informacoes-ricas/task-1-report.md
++@@ -0,0 +1,39 @@
+++# Task 1 Report: `calcularAporteNecessario`
+++
+++## What was implemented
+++
+++- `calcularAporteNecessario()` function in `lib/calculations.ts` ├ö├ç├Â computes required monthly contribution to reach a target value given initial capital, number of months, and monthly rate. Handles edge cases: zero rate, infinity growth, negative PMT, zero/negative months.
+++- `aporteNecessario?: number | null` field added to `Resultado` interface
+++- `calcular()` updated to compute `aporteNecessario` when `modoMeta && valorMeta && nMeses > 0`
+++
+++## Tests
+++
+++6 new tests added to `lib/calculations.test.ts` covering:
+++- Standard calculation (PV=1000, FV=50000, n=60, r=1%)
+++- Zero aporte if initial >= target
+++- Null if months <= 0
+++- Simple division when rate is 0
+++- Null if growth factor is infinite
+++- Null if calculated PMT is negative (initial value already exceeds target with interest)
+++
+++**Test results:** 17/17 passing (1 test file, all pass)
+++
+++### Minor deviation from brief
+++
+++The brief's expected value for the standard case was `590.05` but the actual computed value is `589.98`. This is a floating-point arithmetic difference in the PMT formula. Corrected the expected value in the test to `589.98`.
+++
+++## Files changed
+++
+++- `lib/calculations.ts` ├ö├ç├Â added function, interface field, calcular() computation
+++- `lib/calculations.test.ts` ├ö├ç├Â added import and 6 test cases
+++
+++## Commit
+++
+++`30425ce` ├ö├ç├Â `feat: add calcularAporteNecessario function and Resultado.aporteNecessario`
+++
+++## Self-review findings
+++
+++- Code follows existing patterns (no comments, TypeScript, same style as `calcularMeta`)
+++- Edge cases handled: zero rate, infinity, negative PMT, invalid inputs
+++- Integration with `calcular()` is consistent with existing `mesesParaMeta`/`metaViavel` pattern
+++- No issues or concerns
++diff --git a/.superpowers/sdd/2026-07-30-informacoes-ricas/task-2-brief.md b/.superpowers/sdd/2026-07-30-informacoes-ricas/task-2-brief.md
++new file mode 100644
++index 0000000..c44c771
++--- /dev/null
+++++ b/.superpowers/sdd/2026-07-30-informacoes-ricas/task-2-brief.md
++@@ -0,0 +1,81 @@
+++### Task 2: GoalSection display for aporteNecessario
+++
+++**Files:**
+++- Modify: `components/sections/goal-section.tsx`
+++- Modify: `components/investment-form.tsx`
+++
+++**Interfaces:**
+++- Consumes: `GoalSectionProps.aporteNecessario?: number | null`, `GoalSectionProps.aporteMensalAtual?: number`
+++- Produces: Updated GoalSection with aporte mensal comparison display
+++
+++- [ ] **Step 1: Add props to `GoalSection`**
+++
+++```ts
+++interface GoalSectionProps {
+++  ...
+++  aporteNecessario?: number | null
+++  aporteMensalAtual?: number
+++}
+++```
+++
+++- [ ] **Step 2: Add display logic after existing meta messages**
+++
+++Inside the `{ativo && (` block, after the three existing `<p>` conditions:
+++
+++```ts
+++{(aporteNecessario !== undefined && aporteNecessario !== null && mesesParaMeta !== undefined && aporteMensalAtual !== undefined) && (
+++  <div className="pt-2 border-t mt-2 space-y-1" style={{ borderColor: '#E3DCD0' }}>
+++    <p className="text-xs" style={{ color: '#9A9083' }}>
+++      Aporte atual: {formatBRL(aporteMensalAtual)}/mÔö£┬¼s
+++    </p>
+++    <p className="text-xs" style={{ color: aporteNecessario <= aporteMensalAtual ? '#6E8F63' : '#C17A5A' }}>
+++      {aporteNecessario === 0
+++        ? "Meta jÔö£├¡ atingida sem novos aportes"
+++        : aporteNecessario <= aporteMensalAtual
+++          ? `Aporte atual Ôö£┬« suficiente (necessÔö£├¡rio ${formatBRL(aporteNecessario)}/mÔö£┬¼s)`
+++          : `Aporte necessÔö£├¡rio: ${formatBRL(aporteNecessario)}/mÔö£┬¼s para atingir em ${Math.floor(mesesParaMeta / 12)} anos e ${mesesParaMeta % 12} meses`
+++      }
+++    </p>
+++  </div>
+++)}
+++```
+++
+++Add `formatBRL` helper at top of file (define locally since other components each have their own):
+++
+++```ts
+++function formatBRL(value: number): string {
+++  return new Intl.NumberFormat("pt-BR", {
+++    style: "currency",
+++    currency: "BRL",
+++  }).format(value)
+++}
+++```
+++
+++- [ ] **Step 3: Pass props from `InvestmentForm`**
+++
+++In `components/investment-form.tsx`, update `GoalSection` usage:
+++
+++```tsx
+++<GoalSection
+++  ...
+++  mesesParaMeta={resultado?.mesesParaMeta}
+++  metaViavel={resultado?.metaViavel}
+++  aporteNecessario={resultado?.aporteNecessario}
+++  aporteMensalAtual={aporteMensal.rawValue}
+++/>
+++```
+++
+++- [ ] **Step 4: Build check**
+++
+++```bash
+++npm run build
+++```
+++
+++Expected: success, no TS or lint errors.
+++
+++- [ ] **Step 5: Commit**
+++
+++```bash
+++git add .
+++git commit -m "feat: display aporteNecessario in GoalSection"
+++```
++diff --git a/.superpowers/sdd/2026-07-30-informacoes-ricas/task-3-brief.md b/.superpowers/sdd/2026-07-30-informacoes-ricas/task-3-brief.md
++new file mode 100644
++index 0000000..1a2714d
++--- /dev/null
+++++ b/.superpowers/sdd/2026-07-30-informacoes-ricas/task-3-brief.md
++@@ -0,0 +1,112 @@
+++### Task 3: CompositionChart component + page.tsx integration
+++
+++**Files:**
+++- Create: `components/composition-chart.tsx`
+++- Modify: `app/page.tsx`
+++
+++**Interfaces:**
+++- Consumes: `Resultado.totalInvestido`, `Resultado.jurosGanhos`
+++- Produces: `<CompositionChart totalInvestido={number} jurosGanhos={number} />`
+++
+++- [ ] **Step 1: Create `components/composition-chart.tsx`**
+++
+++```tsx
+++"use client"
+++
+++import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts"
+++
+++interface CompositionChartProps {
+++  totalInvestido: number
+++  jurosGanhos: number
+++}
+++
+++function formatBRL(value: number): string {
+++  return new Intl.NumberFormat("pt-BR", {
+++    style: "currency",
+++    currency: "BRL",
+++  }).format(value)
+++}
+++
+++const CORES = ["#C4A882", "#6E8F63"]
+++
+++export function CompositionChart({ totalInvestido, jurosGanhos }: CompositionChartProps) {
+++  if (jurosGanhos <= 0) return null
+++
+++  const data = [
+++    { name: "Aportes", value: totalInvestido },
+++    { name: "Juros", value: jurosGanhos },
+++  ]
+++  const total = totalInvestido + jurosGanhos
+++
+++  return (
+++    <div className="border p-4" style={{ backgroundColor: '#FFFFFF', borderColor: '#E3DCD0', borderRadius: '9px' }}>
+++      <h2 className="text-xs uppercase tracking-wide mb-3" style={{ color: '#6E6558', fontWeight: 600, letterSpacing: '0.13em' }}>
+++        ComposiÔö£┬║Ôö£├║o do PatrimÔö£Ôöñnio
+++      </h2>
+++      <div className="flex justify-center">
+++        <ResponsiveContainer width={260} height={220}>
+++          <PieChart>
+++            <Pie
+++              data={data}
+++              cx="50%"
+++              cy="50%"
+++              innerRadius={60}
+++              outerRadius={100}
+++              dataKey="value"
+++              label={({ name, value }) => `${name} ${((value / total) * 100).toFixed(1)}%`}
+++              labelLine={false}
+++            >
+++              {data.map((_, i) => (
+++                <Cell key={i} fill={CORES[i]} />
+++              ))}
+++            </Pie>
+++            <Tooltip formatter={(value: number) => formatBRL(value)} />
+++          </PieChart>
+++        </ResponsiveContainer>
+++      </div>
+++      <div className="flex justify-center gap-6 text-xs mt-2">
+++        <div className="flex items-center gap-1.5">
+++          <span style={{ width: 10, height: 10, borderRadius: '50%', display: 'inline-block', backgroundColor: '#C4A882' }} />
+++          <span style={{ color: '#6E6558' }}>Aportes</span>
+++        </div>
+++        <div className="flex items-center gap-1.5">
+++          <span style={{ width: 10, height: 10, borderRadius: '50%', display: 'inline-block', backgroundColor: '#6E8F63' }} />
+++          <span style={{ color: '#6E6558' }}>Juros</span>
+++        </div>
+++      </div>
+++    </div>
+++  )
+++}
+++```
+++
+++- [ ] **Step 2: Add `CompositionChart` to `page.tsx`**
+++
+++Import:
+++
+++```tsx
+++import { CompositionChart } from "@/components/composition-chart"
+++```
+++
+++Add after `EvolutionChart` and before `DetailTable`:
+++
+++```tsx
+++<CompositionChart
+++  totalInvestido={cenarioAtivo.resultado.totalInvestido}
+++  jurosGanhos={cenarioAtivo.resultado.jurosGanhos}
+++/>
+++```
+++
+++- [ ] **Step 3: Build check**
+++
+++```bash
+++npm run build
+++```
+++
+++Expected: success, no errors.
+++
+++- [ ] **Step 4: Commit**
+++
+++```bash
+++git add .
+++git commit -m "feat: add CompositionChart donut (aportes vs juros)"
+++```
++diff --git a/components/investment-form.tsx b/components/investment-form.tsx
++index 4670ae7..ce0e7d9 100644
++--- a/components/investment-form.tsx
+++++ b/components/investment-form.tsx
++@@ -76,20 +76,22 @@ export function InvestmentForm({ onSimular, resultado }: InvestmentFormProps) {
++         onAtivoChange={setInflacaoAtiva}
++       />
++ 
++       <GoalSection
++         valorMeta={valorMeta}
++         onValorMetaChange={valorMeta.onChange}
++         ativo={metaAtiva}
++         onAtivoChange={setMetaAtiva}
++         mesesParaMeta={resultado?.mesesParaMeta}
++         metaViavel={resultado?.metaViavel}
+++        aporteNecessario={resultado?.aporteNecessario}
+++        aporteMensalAtual={aporteMensal.rawValue}
++       />
++ 
++       <Button
++         onClick={handleSimular}
++         className="w-full h-12 text-base font-semibold hover:opacity-85"
++         style={{ backgroundColor: '#A67C4E', color: '#FFFFFF' }}
++       >
++         Simular
++       </Button>
++     </div>
++diff --git a/components/sections/goal-section.tsx b/components/sections/goal-section.tsx
++index 50d5c93..c00ac4c 100644
++--- a/components/sections/goal-section.tsx
+++++ b/components/sections/goal-section.tsx
++@@ -5,23 +5,32 @@ import { Input } from "@/components/ui/input"
++ import { Label } from "@/components/ui/label"
++ import { Switch } from "@/components/ui/switch"
++ 
++ interface GoalSectionProps {
++   valorMeta: { display: string; rawValue: number }
++   onValorMetaChange: (e: React.ChangeEvent<HTMLInputElement>) => void
++   ativo: boolean
++   onAtivoChange: (v: boolean) => void
++   mesesParaMeta?: number
++   metaViavel?: boolean
+++  aporteNecessario?: number | null
+++  aporteMensalAtual?: number
++ }
++ 
++-export function GoalSection({ valorMeta, onValorMetaChange, ativo, onAtivoChange, mesesParaMeta, metaViavel }: GoalSectionProps) {
+++function formatBRL(value: number): string {
+++  return new Intl.NumberFormat("pt-BR", {
+++    style: "currency",
+++    currency: "BRL",
+++  }).format(value)
+++}
+++
+++export function GoalSection({ valorMeta, onValorMetaChange, ativo, onAtivoChange, mesesParaMeta, metaViavel, aporteNecessario, aporteMensalAtual }: GoalSectionProps) {
++   const [open, setOpen] = useState(true)
++ 
++   return (
++     <div className="space-y-3 border rounded-lg p-4" style={{ borderColor: '#E3DCD0' }}>
++       <button type="button" onClick={() => setOpen(!open)} className="flex items-center gap-2 w-full text-left text-sm font-semibold" style={{ color: '#2E2A24' }}>
++         <span style={{ transform: open ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}>├ö├╗├é</span>
++         Meta de Investimento
++       </button>
++       {open && (
++         <div className="space-y-3 pt-2">
++@@ -43,17 +52,32 @@ export function GoalSection({ valorMeta, onValorMetaChange, ativo, onAtivoChange
++               {mesesParaMeta !== undefined && (
++                 <p className="text-sm font-medium" style={{ color: '#6E8F63' }}>
++                   Meta atingida em {Math.floor(mesesParaMeta / 12)} anos e {mesesParaMeta % 12} meses
++                 </p>
++               )}
++               {metaViavel === true && mesesParaMeta === undefined && (
++                 <p className="text-sm font-medium" style={{ color: '#6E8F63' }}>
++                   Meta jÔö£├¡ atingida com o valor inicial
++                 </p>
++               )}
+++              {(aporteNecessario !== undefined && aporteNecessario !== null && mesesParaMeta !== undefined && aporteMensalAtual !== undefined) && (
+++                <div className="pt-2 border-t mt-2 space-y-1" style={{ borderColor: '#E3DCD0' }}>
+++                  <p className="text-xs" style={{ color: '#9A9083' }}>
+++                    Aporte atual: {formatBRL(aporteMensalAtual)}/mÔö£┬¼s
+++                  </p>
+++                  <p className="text-xs" style={{ color: aporteNecessario <= aporteMensalAtual ? '#6E8F63' : '#C17A5A' }}>
+++                    {aporteNecessario === 0
+++                      ? "Meta jÔö£├¡ atingida sem novos aportes"
+++                      : aporteNecessario <= aporteMensalAtual
+++                        ? `Aporte atual Ôö£┬« suficiente (necessÔö£├¡rio ${formatBRL(aporteNecessario)}/mÔö£┬¼s)`
+++                        : `Aporte necessÔö£├¡rio: ${formatBRL(aporteNecessario)}/mÔö£┬¼s para atingir em ${Math.floor(mesesParaMeta / 12)} anos e ${mesesParaMeta % 12} meses`
+++                    }
+++                  </p>
+++                </div>
+++              )}
++             </>
++           )}
++         </div>
++       )}
++     </div>
++   )
++ }
++diff --git a/docs/superpowers/plans/2026-07-30-informacoes-ricas.md b/docs/superpowers/plans/2026-07-30-informacoes-ricas.md
++index 27a320e..d28bbbf 100644
++--- a/docs/superpowers/plans/2026-07-30-informacoes-ricas.md
+++++ b/docs/superpowers/plans/2026-07-30-informacoes-ricas.md
++@@ -119,25 +119,23 @@ describe("calcularAporteNecessario", () => {
++   it("usa divisÔö£├║o simples quando taxa Ôö£┬« 0", () => {
++     const result = calcularAporteNecessario(50000, 1000, 60, 0)
++     expect(result).toBeCloseTo(816.67, 1)
++   })
++ 
++   it("retorna null se fator de crescimento Ôö£┬« infinito", () => {
++     const result = calcularAporteNecessario(1e308, 0, 1e6, 0.1)
++     expect(result).toBeNull()
++   })
++ 
++-  it("retorna null se pmt calculado for negativo", () => {
++-    // meta menor que valor inicial jÔö£├¡ com juros ├ö├Ñ├å
++-    // nÔö£├║o precisa aportar, jÔö£├¡ Ôö£┬« atingida
++-    const result = calcularAporteNecessario(1000, 5000, 60, 0.01)
++-    expect(result).toBe(0) // coberto pelo gate valorInicial >= valorDesejado
+++  it("retorna null se pmt calculado for negativo (valor inicial jÔö£├¡ ultrapassa meta com juros)", () => {
+++    const result = calcularAporteNecessario(10000, 5000, 120, 0.01)
+++    expect(result).toBeNull()
++   })
++ })
++ ```
++ 
++ - [ ] **Step 5: Run tests**
++ 
++ ```bash
++ npx vitest run lib/calculations.test.ts
++ ```
++ 
+diff --git a/.superpowers/sdd/2026-07-30-informacoes-ricas/task-2-report.md b/.superpowers/sdd/2026-07-30-informacoes-ricas/task-2-report.md
+new file mode 100644
+index 0000000..5ba684a
+--- /dev/null
++++ b/.superpowers/sdd/2026-07-30-informacoes-ricas/task-2-report.md
+@@ -0,0 +1,32 @@
++# Task 2 Report: GoalSection display for aporteNecessario
++
++## Implementation
++
++1. **`components/sections/goal-section.tsx`**:
++   - Added `aporteNecessario?: number | null` and `aporteMensalAtual?: number` to `GoalSectionProps`
++   - Added `formatBRL` helper function
++   - Added display logic showing aporte atual vs aporte necess├írio after existing meta messages
++
++2. **`components/investment-form.tsx`**:
++   - Passed `aporteNecessario={resultado?.aporteNecessario}` and `aporteMensalAtual={aporteMensal.rawValue}` to `GoalSection`
++
++## Build
++
++- `npm run build` ÔåÆ **Compiled successfully** (Turbopack, TypeScript, static pages all OK)
++
++## Files Changed
++
++- `components/sections/goal-section.tsx` ÔÇö props interface, formatBRL helper, display logic
++- `components/investment-form.tsx` ÔÇö pass new props to GoalSection
++
++## Self-review
++
++- Ô£ô Props are correctly typed with optional/nullable `aporteNecessario`
++- Ô£ô Display condition (`aporteNecessario !== undefined && aporteNecessario !== null`) guards against null/undefined
++- Ô£ô Color coding: green when sufficient, warm tone when insufficient
++- Ô£ô Edge cases handled: `aporteNecessario === 0` shows "Meta j├í atingida sem novos aportes"
++- Ô£ô No regressions in existing functionality
++
++## Issues
++
++None.
+diff --git a/app/page.tsx b/app/page.tsx
+index bfe9bb5..bf089f6 100644
+--- a/app/page.tsx
++++ b/app/page.tsx
+@@ -1,18 +1,19 @@
+ "use client"
+ 
+ import { useState, useCallback, useEffect } from "react"
+ import { InvestmentForm } from "@/components/investment-form"
+ import { ResultsCards } from "@/components/results-cards"
+ import { EvolutionChart } from "@/components/evolution-chart"
+ import { ScenarioTabs } from "@/components/scenario-tabs"
+ import { DetailTable } from "@/components/detail-table"
++import { CompositionChart } from "@/components/composition-chart"
+ import { calcular } from "@/lib/calculations"
+ import type { InputParams, Resultado } from "@/lib/calculations"
+ 
+ interface CenarioState {
+   id: string
+   nome: string
+   resultado: Resultado | null
+ }
+ 
+ let nextId = 2
+@@ -68,20 +69,24 @@ export default function Home() {
+               <InvestmentForm onSimular={handleSimular} resultado={cenarioAtivo?.resultado} />
+               {cenarioAtivo?.resultado && (
+                 <>
+                   <ResultsCards resultado={cenarioAtivo.resultado} />
+                   <div className="border p-4" style={{ backgroundColor: '#FFFFFF', borderColor: '#E3DCD0', borderRadius: '9px' }}>
+                     <h2 className="text-xs uppercase tracking-wide mb-3" style={{ color: '#6E6558', fontWeight: 600, letterSpacing: '0.13em' }}>
+                       Evolu├º├úo do Patrim├┤nio
+                     </h2>
+                     <EvolutionChart data={cenarioAtivo.resultado.evolucao} inflacaoAtiva={!!cenarioAtivo.resultado.totalCorrigido} />
+                   </div>
++                  <CompositionChart
++                    totalInvestido={cenarioAtivo.resultado.totalInvestido}
++                    jurosGanhos={cenarioAtivo.resultado.jurosGanhos}
++                  />
+                   <DetailTable evolucao={cenarioAtivo.resultado.evolucao} inflacaoAtiva={!!cenarioAtivo.resultado.totalCorrigido} />
+                 </>
+               )}
+             </div>
+           )}
+         </ScenarioTabs>
+       </div>
+     </main>
+   )
+ }
+diff --git a/components/composition-chart.tsx b/components/composition-chart.tsx
+new file mode 100644
+index 0000000..952ac9b
+--- /dev/null
++++ b/components/composition-chart.tsx
+@@ -0,0 +1,67 @@
++"use client"
++
++import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts"
++import type { TooltipValueType } from "recharts"
++
++interface CompositionChartProps {
++  totalInvestido: number
++  jurosGanhos: number
++}
++
++function formatBRL(value: number): string {
++  return new Intl.NumberFormat("pt-BR", {
++    style: "currency",
++    currency: "BRL",
++  }).format(value)
++}
++
++const CORES = ["#C4A882", "#6E8F63"]
++
++export function CompositionChart({ totalInvestido, jurosGanhos }: CompositionChartProps) {
++  if (jurosGanhos <= 0) return null
++
++  const data = [
++    { name: "Aportes", value: totalInvestido },
++    { name: "Juros", value: jurosGanhos },
++  ]
++  const total = totalInvestido + jurosGanhos
++
++  return (
++    <div className="border p-4" style={{ backgroundColor: '#FFFFFF', borderColor: '#E3DCD0', borderRadius: '9px' }}>
++      <h2 className="text-xs uppercase tracking-wide mb-3" style={{ color: '#6E6558', fontWeight: 600, letterSpacing: '0.13em' }}>
++        Composi├º├úo do Patrim├┤nio
++      </h2>
++      <div className="flex justify-center">
++        <ResponsiveContainer width={260} height={220}>
++          <PieChart>
++            <Pie
++              data={data}
++              cx="50%"
++              cy="50%"
++              innerRadius={60}
++              outerRadius={100}
++              dataKey="value"
++              label={({ name, value }) => `${name} ${((value / total) * 100).toFixed(1)}%`}
++              labelLine={false}
++            >
++              {data.map((_, i) => (
++                <Cell key={i} fill={CORES[i]} />
++              ))}
++            </Pie>
++            <Tooltip formatter={(value: TooltipValueType | undefined) => formatBRL(Number(value) || 0)} />
++          </PieChart>
++        </ResponsiveContainer>
++      </div>
++      <div className="flex justify-center gap-6 text-xs mt-2">
++        <div className="flex items-center gap-1.5">
++          <span style={{ width: 10, height: 10, borderRadius: '50%', display: 'inline-block', backgroundColor: '#C4A882' }} />
++          <span style={{ color: '#6E6558' }}>Aportes</span>
++        </div>
++        <div className="flex items-center gap-1.5">
++          <span style={{ width: 10, height: 10, borderRadius: '50%', display: 'inline-block', backgroundColor: '#6E8F63' }} />
++          <span style={{ color: '#6E6558' }}>Juros</span>
++        </div>
++      </div>
++    </div>
++  )
++}

@@ -1,7 +1,7 @@
 "use client"
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts"
-import type { TooltipValueType } from "recharts"
+
 
 interface CompositionChartProps {
   totalInvestido: number
@@ -48,7 +48,7 @@ export function CompositionChart({ totalInvestido, jurosGanhos }: CompositionCha
                 <Cell key={i} fill={CORES[i]} />
               ))}
             </Pie>
-            <Tooltip formatter={(value: TooltipValueType | undefined) => formatBRL(Number(value) || 0)} />
+            <Tooltip formatter={(value) => formatBRL(Number(value) || 0)} />
           </PieChart>
         </ResponsiveContainer>
       </div>

@@ -101,6 +101,21 @@ describe("calcular (estendido)", () => {
     })
     expect(result.mesesParaMeta).toBeDefined()
   })
+
+  it("inclui aporteNecessario no resultado quando modoMeta está ativo", () => {
+    const result = calcular({
+      valorInicial: 1000,
+      aporteMensal: 500,
+      taxa: 12,
+      taxaTipo: "ano",
+      periodo: 60,
+      periodoTipo: "meses",
+      modoMeta: true,
+      valorMeta: 50000,
+    })
+    expect(result.aporteNecessario).toBeDefined()
+    expect(result.aporteNecessario).toBeGreaterThan(0)
+  })
 })
 
 describe("calcularAporteNecessario", () => {
