@@ -34,16 +34,16 @@ export interface Resultado {
   mesesParaMeta?: number
 }
 
-export function calcularIR(lucro: number, meses: number, aliquotaFixa: number | null): { aliquota: number; valorIR: number } {
+export function calcularIR(lucro: number, dias: number, aliquotaFixa: number | null): { aliquota: number; valorIR: number } {
   if (lucro <= 0) return { aliquota: 0, valorIR: 0 }
   let aliquota: number
   if (aliquotaFixa !== null) {
     aliquota = aliquotaFixa
-  } else if (meses < 180) {
+  } else if (dias < 180) {
     aliquota = 22.5
-  } else if (meses < 360) {
+  } else if (dias < 360) {
     aliquota = 20
-  } else if (meses < 720) {
+  } else if (dias < 720) {
     aliquota = 17.5
   } else {
     aliquota = 15
@@ -81,7 +81,7 @@ export function calcularMeta(
   }
   const pmtR = aporteMensal / taxaMensal
   const fator = (valorDesejado + pmtR) / (valorInicial + pmtR)
-  if (fator <= 0) return { meses: 0, viavel: false }
+  if (fator <= 1) return { meses: 0, viavel: true }
   const n = Math.log(fator) / Math.log(1 + taxaMensal)
   if (!isFinite(n) || n < 0) return { meses: 0, viavel: false }
   return { meses: Math.ceil(n), viavel: true }
@@ -95,8 +95,6 @@ export function calcular(params: InputParams): Resultado {
   const nMeses = periodoTipo === "anos" ? periodo * 12 : periodo
 
   const evolucao: EvolucaoMes[] = []
-  let ultimoValor = valorInicial
-
   for (let mes = 0; mes <= nMeses; mes++) {
     let valor: number
     if (taxaMensal === 0) {
@@ -115,11 +113,11 @@ export function calcular(params: InputParams): Resultado {
     if (aliquotaIR !== undefined || modoIR === "tabela" || modoIR === "fixo") {
       const lucroAcumulado = valor - (valorInicial + aporteMensal * mes)
       if (comeCotas && mes > 0 && mes % 6 === 0 && lucroAcumulado > 0) {
-        const result = calcularIR(lucroAcumulado, mes, aliquotaIR ?? null)
+        const result = calcularIR(lucroAcumulado, mes * 30, aliquotaIR ?? null)
         ir = result.valorIR
         valorLiquido = valor - ir
       } else if (mes === nMeses && lucroAcumulado > 0) {
-        const result = calcularIR(lucroAcumulado, mes, aliquotaIR ?? null)
+        const result = calcularIR(lucroAcumulado, mes * 30, aliquotaIR ?? null)
         ir = result.valorIR
         valorLiquido = valor - ir
       }
